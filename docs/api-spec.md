@@ -19,6 +19,13 @@ Request (JSON):
   "longitude": -74.0060,
   "house_system": "placidus"
 }
+### Request field rules (v1)
+- `date`: required, format `YYYY-MM-DD`
+- `time`: required, format `HH:MM` (24-hour)
+- `timezone`: required, IANA timezone string (example: `America/New_York`)
+- `latitude`: required, -90 to 90
+- `longitude`: required, -180 to 180
+- `house_system`: required, v1 supports `placidus` only
 
 Response 200 (JSON):
 {
@@ -32,13 +39,45 @@ Response 200 (JSON):
   },
   "houses": [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
   "bodies": [
-    { "name": "Sun", "lon": 301.23, "speed": 0.98 },
-    { "name": "Moon", "lon": 12.34, "speed": 13.2 }
+    {
+      "name": "Sun",
+      "longitude": 301.23,
+      "sign": "Aquarius",
+      "degree_in_sign": 1.23,
+      "speed": 0.98,
+      "retrograde": false
+    },
+    {
+      "name": "Moon",
+      "longitude": 12.34,
+      "sign": "Aries",
+      "degree_in_sign": 12.34,
+      "speed": 13.2,
+      "retrograde": false
+    }
   ],
   "aspects": [
     { "a": "Sun", "b": "Moon", "type": "trine", "orb": 1.2 }
   ]
 }
+### Response field rules (v1)
+- All angles/longitudes are **ecliptic degrees in the range 0–360**.
+- `houses` is a 12-element array of house cusp longitudes (0–360), starting at House 1 and proceeding in order.
+- `bodies` includes exactly these 10 bodies in v1:
+  - Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto
+- `sign` is one of: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces
+- `degree_in_sign` is 0.00–29.99 (longitude mapped into sign space)
+- `retrograde` is true if `speed` < 0
+
+### Aspect rules (v1)
+Aspect `type` values: `conjunction`, `opposition`, `square`, `trine`, `sextile`
+
+Default orbs:
+- conjunction: 8°
+- opposition: 8°
+- square: 6°
+- trine: 6°
+- sextile: 4°
 
 Errors (example):
 Response 400:

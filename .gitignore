@@ -11,6 +11,10 @@ __pycache__/
 .venv/
 .venv*/
 
+# Python virtual environments
+venv/
+services/ephemeris-api/venv/
+
 # Node
 node_modules/
 dist/
@@ -18,3 +22,7 @@ build/
 
 # Logs
 *.log
+
+# Swiss Ephemeris data files (keep local)
+services/ephemeris-api/ephe/*
+!services/ephemeris-api/ephe/.gitkeep

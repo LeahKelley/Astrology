@@ -1,6 +1,6 @@
 Windows Install Python Virtual Environment (WSL):
 sudo apt install python3.12 python3.12-venv python3.12-dev build-essential -y
-python3.12 -m venv .venv (This should be done already)
+python3.12 -m venv .venv
 
 Windows (WSL):
 source .venv/bin/activate

@@ -4,7 +4,7 @@ python3.12 -m venv .venv
 
 Windows (WSL):
 source .venv/bin/activate
-pip freeze > requirements.txt
+pip freeze > requirements.txt (Do this whenever you add new dependencies)
 pip install -r requirements.txt
 deactivate //to get out of virtual environment
 

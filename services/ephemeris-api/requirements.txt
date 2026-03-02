@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+pyswisseph
+pydantic
+python-dateutil

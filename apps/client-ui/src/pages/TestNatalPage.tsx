@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from "react";
 
 type NatalChartRequest = {
-  birth_date: string;      // YYYY-MM-DD
-  birth_time: string;      // HH:mm
+  date: string;      // YYYY-MM-DD
+  time: string;      // HH:mm
   timezone: string;        // e.g. America/New_York
   latitude: number;
   longitude: number;
   city?: string;
+  house_system: string;
 };
 
 type Body = {
@@ -18,17 +19,12 @@ type Body = {
   house?: number;
 };
 
-type House = {
-  house: number;
-  longitude: number;
-  sign: string;
-  degree_in_sign: number;
-};
+type House = number;
 
 type Aspect = {
-  body1: string;
+  a: string;
   type: string;
-  body2: string;
+  b: string;
   orb: number;
 };
 
@@ -131,12 +127,13 @@ export default function TestNatalPage() {
       }
 
       const payload: NatalChartRequest = {
-        birth_date: buildDate(year, month, day),
-        birth_time: timeUnknown ? "12:00" : timeOfBirth,
+        date: buildDate(year, month, day),
+        time: timeUnknown ? "12:00" : timeOfBirth,
         timezone,
         latitude: coords.latitude,
         longitude: coords.longitude,
         city,
+        house_system: "placidus",
       };
 
       const res = await fetch("http://127.0.0.1:8000/chart/natal", {
@@ -312,11 +309,10 @@ export default function TestNatalPage() {
           <Panel title="Positions of Houses">
             <table style={styles.table}>
               <tbody>
-                {chart.houses.map((house) => (
-                  <tr key={house.house}>
-                    <td style={styles.cellName}>House {house.house}</td>
-                    <td style={styles.cellValue}>{formatDegree(house.degree_in_sign)}</td>
-                    <td style={styles.cellValue}>{house.sign}</td>
+                {chart.houses.map((house, idx) => (
+                  <tr key={idx}>
+                    <td style={styles.cellName}>House {idx + 1}</td>
+                    <td style={styles.cellValue}>{house.toFixed(2)}°</td>
                   </tr>
                 ))}
               </tbody>
@@ -327,10 +323,10 @@ export default function TestNatalPage() {
             <table style={styles.table}>
               <tbody>
                 {chart.aspects.map((aspect, idx) => (
-                  <tr key={`${aspect.body1}-${aspect.body2}-${idx}`}>
-                    <td style={styles.cellName}>{aspect.body1}</td>
+                  <tr key={`${aspect.a}-${aspect.b}-${idx}`}>
+                    <td style={styles.cellName}>{aspect.a}</td>
                     <td style={styles.cellValue}>{aspect.type}</td>
-                    <td style={styles.cellValue}>{aspect.body2}</td>
+                    <td style={styles.cellValue}>{aspect.b}</td>
                     <td style={styles.cellValue}>Orb {formatDegree(aspect.orb)}</td>
                   </tr>
                 ))}

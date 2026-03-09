@@ -14,8 +14,8 @@ Notes:
 """
 
 from fastapi import FastAPI
-from app.api.routes import api_router
-from app.core.logging import configure_logging
+from src.app.api.routes import api_router
+from src.app.core.logging import configure_logging
 
 
 def create_app() -> FastAPI:

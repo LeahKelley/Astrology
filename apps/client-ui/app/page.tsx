@@ -1,65 +1,134 @@
-import Image from "next/image";
+"use client";
+
+import { motion } from "motion/react";
+import { ArrowRight, ChevronDown, Mail, Moon } from "lucide-react";
+import { Navbar } from "./components/Navbar";
+import { PlaceholderCard } from "./components/Envelope";
+import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
+import { StarField } from "./components/StarField";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen flex flex-col bg-github-dark relative">
+      <StarField />
+      <Navbar />
+
+      <main className="flex-grow flex flex-col items-center justify-center pt-32 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[150px] rounded-full animate-pulse" />
+        <div
+          className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-900/10 blur-[150px] rounded-full animate-pulse"
+          style={{ animationDelay: "2s" }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] bg-indigo-900/5 blur-[100px] rounded-full" />
+
+        <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-3 flex justify-center lg:justify-start order-2 lg:order-1">
+            <PlaceholderCard />
+          </div>
+
+          <div className="lg:col-span-6 text-center space-y-8 order-1 lg:order-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight mb-6">
+                Placeholder{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                  Astrology
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="relative group w-full sm:w-auto">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full sm:w-64 bg-github-border/20 border border-github-border rounded-md py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                />
+              </div>
+              <button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-md font-semibold flex items-center justify-center gap-2 transition-all">
+                Sign up <ArrowRight className="w-4 h-4" />
+              </button>
+              <button className="w-full sm:w-auto border border-github-border hover:bg-white/5 text-white px-6 py-2.5 rounded-md font-semibold transition-all">
+                Learn more
+              </button>
+            </motion.div>
+
+            <div className="flex flex-col items-center gap-4 pt-8">
+              <motion.div
+                className="w-20 h-20 rounded-full border border-github-border p-1 bg-gradient-to-b from-purple-500/20 to-transparent flex items-center justify-center relative"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <div className="absolute inset-0 bg-purple-500/10 blur-xl rounded-full" />
+                <div className="w-full h-full rounded-full bg-github-dark flex items-center justify-center">
+                  <Moon className="w-10 h-10 text-purple-400" />
+                </div>
+              </motion.div>
+              <p className="text-xs text-gray-500 max-w-xs font-medium uppercase tracking-widest">
+                lorem
+              </p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3 flex justify-center lg:justify-end order-3">
+            <NatalChartPlaceholder />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <motion.div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <span className="text-[10px] uppercase tracking-[0.3em] font-semibold">
+            More on scroll
+          </span>
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
       </main>
+
+      <section className="bg-github-dark border-t border-github-border py-20 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+          <div className="space-y-4">
+            <h3 className="text-lg font-display font-bold">Lorem Ipsum</h3>
+            <p className="text-sm text-gray-400">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h3 className="text-lg font-display font-bold">Dolor Sit Amet</h3>
+            <p className="text-sm text-gray-400">
+              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h3 className="text-lg font-display font-bold">
+              Consectetur Adipiscing
+            </h3>
+            <p className="text-sm text-gray-400">
+              Duis aute irure dolor in reprehenderit in voluptate velit esse
+              cillum dolore eu fugiat nulla pariatur.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

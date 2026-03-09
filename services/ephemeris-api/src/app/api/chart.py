@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.core.models import NatalChartRequest, NatalChartResponse
-from app.services.natal_chart_service import NatalChartService
+from src.app.core.models import NatalChartRequest, NatalChartResponse
+from src.app.services.natal_chart_service import NatalChartService
 
 router = APIRouter()
 
@@ -10,6 +10,6 @@ def generate_chart(request: NatalChartRequest):
     Generate natal chart data.
     """
     service = NatalChartService()
-    result = service.generate_chart(request)
+    result = service.generate_mock(request)
 
     return result

@@ -9,7 +9,7 @@ IMPORTANT:
 from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
-from app.core.models import NatalChartRequest, NatalChartResponse, Meta, BodyPosition, HouseCusp, Aspect
+from src.app.core.models import NatalChartRequest, NatalChartResponse, Meta, BodyPosition, Aspect, Angles
 
 
 class NatalChartService:

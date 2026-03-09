@@ -1,15 +1,12 @@
-"""Logging configuration.
-ASSIGNED TO SHENG
-"""
-
 import logging
 
-def configure_logging():
-    """Configure app logging.
-
-    PSEUDOCODE:
-    - set root logger level from env
-    - set formatter
-    - avoid duplicate handlers in reload mode
+def configure_logging() -> None:
+    """
+    Configure application-wide logging.
+    Called once during FastAPI startup.
     """
 
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )

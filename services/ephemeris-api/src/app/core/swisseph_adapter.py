@@ -1,26 +1,31 @@
-"""Swiss Ephemeris adapter boundary.
-ASSIGNED TO SHENG
+"""
+Swiss Ephemeris adapter layer.
 
-RULE:
-- ONLY this module should import/use pyswisseph in M3.
-- The rest of the codebase calls functions/classes defined here.
-
-FOR NOW:
-- Do NOT implement Swiss calls yet.
-- LATER, add:
-  - set_ephe_path()
-  - compute_bodies()
-  - compute_houses()
+This module will wrap the pyswisseph library so that the rest of the
+application does not depend directly on the Swiss Ephemeris API.
 """
 
-# PSEUDOCODE FOR LATER IMPLEMENTATION:
-# import swisseph as swe
-#
-# class SwissEphemerisAdapter:
-#     def __init__(self, ephe_path: str):
-#         ...
-#     def compute_bodies(self, utc_dt, lat, lon) -> list[...]:
-#         ...
-#     def compute_houses(self, utc_dt, lat, lon, house_system) -> ...:
-#         ...
-pass
+from typing import Dict, List
+
+
+class SwissEphemerisAdapter:
+    """
+    Adapter responsible for interacting with Swiss Ephemeris.
+    """
+
+    def compute_bodies(self, jd: float) -> List[Dict]:
+        """
+        Compute planetary body positions.
+
+        Placeholder implementation for M2.
+        """
+        raise NotImplementedError("Swiss Ephemeris integration will be implemented in M3")
+
+
+    def compute_houses(self, jd: float, latitude: float, longitude: float) -> Dict:
+        """
+        Compute house cusps and angles.
+
+        Placeholder implementation for M2.
+        """
+        raise NotImplementedError("Swiss Ephemeris integration will be implemented in M3")

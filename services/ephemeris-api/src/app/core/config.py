@@ -1,18 +1,19 @@
-"""Configuration.
-ASSIGNED TO SHENG
+from pydantic import BaseSettings
 
-Put environment variables + settings here later.
-Examples:
-- EPHE_PATH for Swiss ephemeris data files (M3)
-- LOG_LEVEL
-"""
 
-from pydantic import BaseModel
+class Settings(BaseSettings):
+    """
+    Application configuration loaded from environment variables.
+    """
 
-class Settings(BaseModel):
-    # PSEUDOCODE:
-    # ephe_path: str = "ephe"
-    # log_level: str = "INFO"
-    pass
+    APP_NAME: str = "Ephemeris API"
+    APP_VERSION: str = "0.1.0"
+
+    # Swiss Ephemeris data directory (for M3)
+    SWISSEPH_DATA_PATH: str = "./data/ephemeris"
+
+    # Default house system
+    DEFAULT_HOUSE_SYSTEM: str = "placidus"
+
 
 settings = Settings()

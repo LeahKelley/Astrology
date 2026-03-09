@@ -1,13 +1,19 @@
-"""Custom errors + exception mapping.
-ASSIGNED TO SHENG
+class AstrologyAPIError(Exception):
+    """
+    Base exception for application errors.
+    """
+    pass
 
-Later:
-- Validation errors beyond Pydantic
-- Swiss ephemeris adapter errors
-- Business rule errors
-Then add exception handlers in app/main.py.
-"""
 
-class EphemerisError(Exception):
-    """Base exception for ephemeris backend failures."""
+class ChartCalculationError(AstrologyAPIError):
+    """
+    Raised when natal chart calculations fail.
+    """
+    pass
+
+
+class EphemerisDataError(AstrologyAPIError):
+    """
+    Raised when Swiss Ephemeris data cannot be loaded.
+    """
     pass

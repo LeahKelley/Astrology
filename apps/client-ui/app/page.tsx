@@ -2,7 +2,6 @@
 
 import { motion } from "motion/react";
 import { ArrowRight, ChevronDown, Mail, Moon } from "lucide-react";
-import { Navbar } from "./components/Navbar";
 import { PlaceholderCard } from "./components/Envelope";
 import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
 import { StarField } from "./components/StarField";
@@ -11,7 +10,6 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-github-dark relative">
       <StarField />
-      <Navbar />
 
       <main className="flex-grow flex flex-col items-center justify-center pt-32 pb-20 px-6 relative overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[150px] rounded-full animate-pulse" />

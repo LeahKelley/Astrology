@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight, ChevronDown, Mail, Moon } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Moon } from "lucide-react";
 import { PlaceholderCard } from "./components/Envelope";
 import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
 import { StarField } from "./components/StarField";
@@ -45,25 +46,17 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="relative group w-full sm:w-auto">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full sm:w-64 bg-github-border/20 border border-github-border rounded-md py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-                />
-              </div>
-              <button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-md font-semibold flex items-center justify-center gap-2 transition-all">
-                Sign up <ArrowRight className="w-4 h-4" />
-              </button>
-              <button className="w-full sm:w-auto border border-github-border hover:bg-white/5 text-white px-6 py-2.5 rounded-md font-semibold transition-all">
+              <Link
+                href="/faq"
+                className="border border-github-border hover:bg-white/5 text-white px-6 py-2.5 rounded-md font-semibold transition-all"
+              >
                 Learn more
-              </button>
+              </Link>
             </motion.div>
 
             <div className="flex flex-col items-center gap-4 pt-8">

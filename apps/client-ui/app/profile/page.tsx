@@ -1,6 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod/v4";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+import { CalendarDays } from "lucide-react";
+
+const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  dateOfBirth: z.date({ error: "Date of birth is required" }),
+  timeOfBirth: z.string(),
+  timeUnknown: z.boolean(),
+  city: z.string().min(1, "City of birth is required"),
+  timezone: z.string().min(1, "Timezone is required"),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 type NatalChartRequest = {
   date: string;
@@ -29,29 +46,11 @@ type Aspect = {
 };
 
 type NatalChartResponse = {
-  meta?: {
-    request_id?: string;
-    generated_at?: string;
-  };
+  meta?: { request_id?: string; generated_at?: string };
   bodies: Body[];
   houses: number[];
   aspects: Aspect[];
 };
-
-const MONTHS = [
-  { label: "January", value: "01" },
-  { label: "February", value: "02" },
-  { label: "March", value: "03" },
-  { label: "April", value: "04" },
-  { label: "May", value: "05" },
-  { label: "June", value: "06" },
-  { label: "July", value: "07" },
-  { label: "August", value: "08" },
-  { label: "September", value: "09" },
-  { label: "October", value: "10" },
-  { label: "November", value: "11" },
-  { label: "December", value: "12" },
-];
 
 function formatDegree(value: number): string {
   const deg = Math.floor(value);
@@ -60,13 +59,15 @@ function formatDegree(value: number): string {
   return `${deg}°${safeMin.toString().padStart(2, "0")}'`;
 }
 
-function buildDate(year: string, month: string, day: string): string {
-  return `${year}-${month}-${day.padStart(2, "0")}`;
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-function cityToCoords(
-  city: string
-): { latitude: number; longitude: number } | null {
+function cityToCoords(city: string): { latitude: number; longitude: number } | null {
   const lookup: Record<string, { latitude: number; longitude: number }> = {
     "new york": { latitude: 40.7128, longitude: -74.006 },
     "los angeles": { latitude: 34.0522, longitude: -118.2437 },
@@ -77,87 +78,156 @@ function cityToCoords(
   return lookup[city.trim().toLowerCase()] ?? null;
 }
 
-const defaultResponse: NatalChartResponse = {
-  bodies: [],
-  houses: [],
-  aspects: [],
-};
+const defaultResponse: NatalChartResponse = { bodies: [], houses: [], aspects: [] };
 
 function FieldRow({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[110px_1fr] gap-3 items-center mb-3">
-      <div className="text-sm text-gray-400">
+    <div className="mb-3">
+      <div className="text-sm text-gray-400 mb-1">
         {required && <span className="text-red-400">* </span>}
         {label}
       </div>
       <div>{children}</div>
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   );
 }
 
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-white/10 overflow-hidden">
-      <div className="bg-purple-600/80 px-4 py-2 text-sm font-bold text-center">
-        {title}
-      </div>
+      <div className="bg-purple-600/80 px-4 py-2 text-sm font-bold text-center">{title}</div>
       <div className="p-4">{children}</div>
     </div>
   );
 }
 
+function DatePickerField({
+  value,
+  onChange,
+  error,
+}: {
+  value: Date | undefined;
+  onChange: (date: Date | undefined) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-left transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${
+          error
+            ? "border-red-500/30 bg-red-500/5"
+            : "border-white/10 bg-white/5"
+        }`}
+      >
+        <CalendarDays className="w-4 h-4 text-gray-500 shrink-0" />
+        <span className={value ? "text-white" : "text-gray-500"}>
+          {value ? formatDate(value) : "Select date…"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-2 left-0 rounded-xl border border-white/10 bg-github-dark shadow-2xl shadow-black/40 p-3 rdp-dark">
+          <DayPicker
+            mode="single"
+            selected={value}
+            onSelect={(date) => {
+              onChange(date ?? undefined);
+              if (date) setOpen(false);
+            }}
+            defaultMonth={value ?? new Date(2000, 0)}
+            captionLayout="dropdown"
+            startMonth={new Date(1920, 0)}
+            endMonth={new Date()}
+            animate
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
-  const [firstName, setFirstName] = useState("");
-  const [day, setDay] = useState("01");
-  const [month, setMonth] = useState("01");
-  const [year, setYear] = useState("1970");
-  const [timeOfBirth, setTimeOfBirth] = useState("12:00");
-  const [timeUnknown, setTimeUnknown] = useState(false);
-  const [city, setCity] = useState("New York");
-  const [timezone, setTimezone] = useState("America/New_York");
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: "",
+      dateOfBirth: undefined,
+      timeOfBirth: "12:00",
+      timeUnknown: false,
+      city: "New York",
+      timezone: "America/New_York",
+    },
+  });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [apiError, setApiError] = useState("");
   const [chart, setChart] = useState<NatalChartResponse>(defaultResponse);
 
-  const displayName = useMemo(() => {
-    return firstName.trim() || "Profile";
-  }, [firstName]);
+  const firstName = watch("firstName");
+  const timeUnknown = watch("timeUnknown");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const displayName = useMemo(() => firstName.trim() || "Profile", [firstName]);
+
+  const inputClass =
+    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50";
+  const inputErrorClass =
+    "w-full rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50";
+
+  async function onSubmit(data: ProfileFormData) {
     setLoading(true);
-    setError("");
+    setApiError("");
 
     try {
-      const coords = cityToCoords(city);
+      const coords = cityToCoords(data.city);
       if (!coords) {
         throw new Error(
           "City not found in temporary test lookup. Add it to cityToCoords() or use a supported city."
         );
       }
 
+      const d = data.dateOfBirth;
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
       const payload: NatalChartRequest = {
-        date: buildDate(year, month, day),
-        time: timeUnknown ? "12:00" : timeOfBirth,
-        timezone,
+        date: dateStr,
+        time: data.timeUnknown ? "12:00" : data.timeOfBirth,
+        timezone: data.timezone,
         latitude: coords.latitude,
         longitude: coords.longitude,
-        city,
+        city: data.city,
         house_system: "placidus",
       };
 
@@ -172,28 +242,29 @@ export default function ProfilePage() {
         throw new Error(`Request failed: ${res.status} ${text}`);
       }
 
-      const data: NatalChartResponse = await res.json();
-      setChart(data);
+      const result: NatalChartResponse = await res.json();
+      setChart(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
+      setApiError(message);
       setChart(defaultResponse);
     } finally {
       setLoading(false);
     }
   }
 
-  const inputClass =
-    "w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50";
-  const selectClass =
-    "rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50";
+  function handleReset() {
+    reset();
+    setChart(defaultResponse);
+    setApiError("");
+  }
 
   return (
     <div className="min-h-screen bg-github-dark pt-24 p-6 font-sans text-white">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 lg:grid-cols-[340px_1fr]">
         {/* Form */}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           className="rounded-lg border border-white/10 overflow-hidden"
         >
           <div className="bg-purple-600/80 px-4 py-2 text-center text-sm font-bold">
@@ -201,107 +272,71 @@ export default function ProfilePage() {
           </div>
 
           <div className="p-4 space-y-1">
-            <FieldRow label="Firstname" required>
+            <FieldRow label="First name" required error={errors.firstName?.message}>
               <input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className={inputClass}
+                {...register("firstName")}
+                className={errors.firstName ? inputErrorClass : inputClass}
+                placeholder="Enter your name"
               />
             </FieldRow>
 
-            <FieldRow label="Date of Birth">
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={day}
-                  onChange={(e) => setDay(e.target.value)}
-                  className={`${selectClass} w-[62px]`}
-                >
-                  {Array.from({ length: 31 }, (_, i) => {
-                    const val = String(i + 1).padStart(2, "0");
-                    return (
-                      <option key={val} value={val}>
-                        {val}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                <select
-                  value={month}
-                  onChange={(e) => setMonth(e.target.value)}
-                  className={`${selectClass} w-[130px]`}
-                >
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className={`${inputClass} !w-[80px]`}
-                />
-              </div>
+            <FieldRow label="Date of Birth" required error={errors.dateOfBirth?.message}>
+              <Controller
+                control={control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <DatePickerField
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.dateOfBirth?.message}
+                  />
+                )}
+              />
             </FieldRow>
 
-            <FieldRow label="Time of Birth">
+            <FieldRow label="Time of Birth" error={errors.timeOfBirth?.message}>
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="time"
-                  value={timeOfBirth}
-                  onChange={(e) => setTimeOfBirth(e.target.value)}
+                  {...register("timeOfBirth")}
                   disabled={timeUnknown}
-                  className={`${inputClass} !w-[120px]`}
+                  className={`${errors.timeOfBirth ? inputErrorClass : inputClass} !w-[120px]`}
                 />
-                <label className="flex items-center gap-1.5 text-xs text-gray-400">
+                <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={timeUnknown}
-                    onChange={(e) => setTimeUnknown(e.target.checked)}
+                    {...register("timeUnknown")}
+                    className="accent-purple-500"
                   />
                   Unknown
                 </label>
               </div>
             </FieldRow>
 
-            <FieldRow label="City of Birth" required>
+            <FieldRow label="City of Birth" required error={errors.city?.message}>
               <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className={inputClass}
+                {...register("city")}
+                className={errors.city ? inputErrorClass : inputClass}
+                placeholder="e.g. New York"
               />
             </FieldRow>
 
-            <FieldRow label="Timezone">
+            <FieldRow label="Timezone" required error={errors.timezone?.message}>
               <input
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className={inputClass}
+                {...register("timezone")}
+                className={errors.timezone ? inputErrorClass : inputClass}
+                placeholder="e.g. America/New_York"
               />
             </FieldRow>
 
             <div className="flex justify-center gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => {
-                  setFirstName("");
-                  setDay("01");
-                  setMonth("01");
-                  setYear("1970");
-                  setTimeOfBirth("12:00");
-                  setTimeUnknown(false);
-                  setCity("New York");
-                  setTimezone("America/New_York");
-                  setChart(defaultResponse);
-                  setError("");
-                }}
+                onClick={handleReset}
                 className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10"
               >
                 Reset
               </button>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -311,9 +346,7 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <p className="pt-3 text-center text-xs text-red-400/70">
-              * Required field
-            </p>
+            <p className="pt-3 text-center text-xs text-red-400/70">* Required field</p>
           </div>
         </form>
 
@@ -321,9 +354,9 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl font-bold text-purple-300">{displayName}</h2>
 
-          {error && (
+          {apiError && (
             <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {error}
+              {apiError}
             </div>
           )}
 
@@ -331,22 +364,11 @@ export default function ProfilePage() {
             <table className="w-full">
               <tbody>
                 {chart.bodies.map((body) => (
-                  <tr
-                    key={body.name}
-                    className="border-b border-white/5 last:border-0"
-                  >
-                    <td className="py-1.5 pr-4 text-sm text-purple-300">
-                      {body.name}
-                    </td>
-                    <td className="py-1.5 pr-4 text-sm text-gray-300">
-                      {formatDegree(body.degree_in_sign)}
-                    </td>
-                    <td className="py-1.5 pr-4 text-sm text-gray-300">
-                      {body.sign}
-                    </td>
-                    <td className="py-1.5 text-sm text-red-400">
-                      {body.retrograde ? "R" : ""}
-                    </td>
+                  <tr key={body.name} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 pr-4 text-sm text-purple-300">{body.name}</td>
+                    <td className="py-1.5 pr-4 text-sm text-gray-300">{formatDegree(body.degree_in_sign)}</td>
+                    <td className="py-1.5 pr-4 text-sm text-gray-300">{body.sign}</td>
+                    <td className="py-1.5 text-sm text-red-400">{body.retrograde ? "R" : ""}</td>
                   </tr>
                 ))}
               </tbody>
@@ -359,16 +381,9 @@ export default function ProfilePage() {
                 {chart.bodies
                   .filter((body) => typeof body.house === "number")
                   .map((body) => (
-                    <tr
-                      key={`${body.name}-house`}
-                      className="border-b border-white/5 last:border-0"
-                    >
-                      <td className="py-1.5 pr-4 text-sm text-purple-300">
-                        {body.name}
-                      </td>
-                      <td className="py-1.5 text-sm text-gray-300">
-                        House {body.house}
-                      </td>
+                    <tr key={`${body.name}-house`} className="border-b border-white/5 last:border-0">
+                      <td className="py-1.5 pr-4 text-sm text-purple-300">{body.name}</td>
+                      <td className="py-1.5 text-sm text-gray-300">House {body.house}</td>
                     </tr>
                   ))}
               </tbody>
@@ -379,16 +394,9 @@ export default function ProfilePage() {
             <table className="w-full">
               <tbody>
                 {chart.houses.map((house, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-white/5 last:border-0"
-                  >
-                    <td className="py-1.5 pr-4 text-sm text-purple-300">
-                      House {idx + 1}
-                    </td>
-                    <td className="py-1.5 text-sm text-gray-300">
-                      {house.toFixed(2)}°
-                    </td>
+                  <tr key={idx} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 pr-4 text-sm text-purple-300">House {idx + 1}</td>
+                    <td className="py-1.5 text-sm text-gray-300">{house.toFixed(2)}°</td>
                   </tr>
                 ))}
               </tbody>
@@ -399,22 +407,11 @@ export default function ProfilePage() {
             <table className="w-full">
               <tbody>
                 {chart.aspects.map((aspect, idx) => (
-                  <tr
-                    key={`${aspect.a}-${aspect.b}-${idx}`}
-                    className="border-b border-white/5 last:border-0"
-                  >
-                    <td className="py-1.5 pr-4 text-sm text-purple-300">
-                      {aspect.a}
-                    </td>
-                    <td className="py-1.5 pr-4 text-sm text-gray-300">
-                      {aspect.type}
-                    </td>
-                    <td className="py-1.5 pr-4 text-sm text-gray-300">
-                      {aspect.b}
-                    </td>
-                    <td className="py-1.5 text-sm text-gray-400">
-                      Orb {formatDegree(aspect.orb)}
-                    </td>
+                  <tr key={`${aspect.a}-${aspect.b}-${idx}`} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 pr-4 text-sm text-purple-300">{aspect.a}</td>
+                    <td className="py-1.5 pr-4 text-sm text-gray-300">{aspect.type}</td>
+                    <td className="py-1.5 pr-4 text-sm text-gray-300">{aspect.b}</td>
+                    <td className="py-1.5 text-sm text-gray-400">Orb {formatDegree(aspect.orb)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrodraw/astrochart": "^3.0.2",
+    "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.0",
     "ai": "^6.0.116",
@@ -22,7 +23,8 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
     "react-timezone-select": "^3.3.2",
-    "swr": "^2.4.1"
+    "swr": "^2.4.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

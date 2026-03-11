@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { ChevronDown, Moon } from "lucide-react";
 import { PlaceholderCard } from "./components/Envelope";
-import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
+import { ChartWheel } from "./components/ChartWheel";
 import { StarField } from "./components/StarField";
 
 export default function Home() {
@@ -77,7 +77,7 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-3 flex justify-center lg:justify-end order-3">
-            <NatalChartPlaceholder />
+            <ChartWheel className="max-w-[320px]" />
           </div>
         </div>
 

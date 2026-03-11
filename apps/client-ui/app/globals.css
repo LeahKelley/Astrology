@@ -43,3 +43,81 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-github-border rounded-full;
 }
+
+/* DayPicker dark theme */
+.rdp-dark {
+  --rdp-accent-color: #7c3aed;
+  --rdp-accent-background-color: rgba(124, 58, 237, 0.15);
+  --rdp-today-color: #a78bfa;
+  --rdp-selected-font: bold;
+  --rdp-outside-opacity: 0.3;
+
+  .rdp-root {
+    --rdp-day-height: 36px;
+    --rdp-day-width: 36px;
+    font-size: 13px;
+    color: #e5e7eb;
+  }
+
+  .rdp-month_caption {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e5e7eb;
+    padding-bottom: 4px;
+  }
+
+  .rdp-weekday {
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .rdp-day_button {
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .rdp-day_button:hover {
+    background: rgba(124, 58, 237, 0.2);
+    color: #fff;
+  }
+
+  .rdp-selected .rdp-day_button {
+    background: #7c3aed;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .rdp-today:not(.rdp-selected) .rdp-day_button {
+    color: #a78bfa;
+    font-weight: 700;
+  }
+
+  .rdp-chevron {
+    fill: #9ca3af;
+  }
+
+  .rdp-button_next:hover .rdp-chevron,
+  .rdp-button_previous:hover .rdp-chevron {
+    fill: #e5e7eb;
+  }
+
+  .rdp-dropdown,
+  .rdp-dropdowns select,
+  .rdp-month_caption select {
+    background-color: #0d1117 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e5e7eb !important;
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .rdp-dropdown option,
+  .rdp-dropdowns select option,
+  .rdp-month_caption select option {
+    background-color: #0d1117 !important;
+    color: #e5e7eb !important;
+  }
+}

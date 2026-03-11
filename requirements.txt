@@ -5,3 +5,4 @@ supabase
 pydantic
 uvicorn[standard]
 python-dateutil
+geopy

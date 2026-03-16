@@ -3,15 +3,24 @@ ASSIGNED TO Leah
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.app.api.routes import api_router
 from src.app.core.logging import configure_logging
 
 
 def create_app() -> FastAPI:
     """Factory function to create and configure the FastAPI app."""
-    configure_logging()  # Set up logging configuration
+    configure_logging()
     app = FastAPI(title="Ephemeris API", version="0.1.0")
-    app.include_router(api_router, prefix="/api/v1")  # Include API routes
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000", "http://localhost:5173"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(api_router, prefix="/api/v1")
     return app
 
-app = create_app()  # Create the FastAPI app instance
+app = create_app()

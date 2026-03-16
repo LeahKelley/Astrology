@@ -15,7 +15,7 @@ Natal chart engine and interactive chart wheel. The frontend collects user input
 | Data fetching | SWR |
 | Chart rendering | AstroChart (SVG) |
 | AI layer | Vercel AI SDK |
-| Auth & DB | Supabase |
+| Auth & DB | Firebase |
 | Backend API | FastAPI + pyswisseph |
 
 ## Prerequisites

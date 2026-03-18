@@ -1,8 +1,11 @@
 import os
 import swisseph as swe
+from datetime import datetime
 from fastapi import FastAPI, Query, HTTPException
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+from zoneinfo import ZoneInfo
+from timezonefinder import TimezoneFinder
 
 app = FastAPI(
     title="Geolocation",
@@ -10,6 +13,7 @@ app = FastAPI(
 )
 
 geolocator = Nominatim(user_agent="Location Data") 
+tf = TimezoneFinder()
 geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 
 @app.get("/location/geolocation")
@@ -22,4 +26,15 @@ def location(address: str):
             detail=f"Address '{address}' could not be found. "
         )
     locationData.append({"longitude": getLocation.latitude, "latitude": getLocation.longitude})
-    return {"Longitude and Latitude": locationData}
+    return {'Longitude and Latitude': locationData}
+
+@app.get("/location/geolocation/timezone")
+def timezone(lat: float, lng: float):
+    timezoneName = tf.timezone_at(lng=lng, lat=lat)
+
+    timeNow = datetime.now(ZoneInfo(timezoneName))
+    convertedTime = timeNow.utcoffset().total_seconds() / 3600 #Convert time to seconds then hour to find UTC Time
+    return {
+        "timezone": timezoneName, #Timezone Name
+        "utc_offset": convertedTime #UTC Time
+    }

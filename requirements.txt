@@ -1,8 +1,0 @@
-fastapi
-pyswisseph
-python-dotenv
-supabase
-pydantic
-uvicorn[standard]
-python-dateutil
-geopy

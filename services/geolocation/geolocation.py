@@ -25,8 +25,8 @@ def location(address: str):
             status_code=404, 
             detail=f"Address '{address}' could not be found. "
         )
-    locationData.append({"longitude": getLocation.latitude, "latitude": getLocation.longitude})
-    return {'Longitude and Latitude': locationData}
+    locationData.append({"latitude": getLocation.latitude, "longitude": getLocation.longitude})
+    return {'Latitude and Longitude': locationData}
 
 @app.get("/location/geolocation/timezone")
 def timezone(lat: float, lng: float):

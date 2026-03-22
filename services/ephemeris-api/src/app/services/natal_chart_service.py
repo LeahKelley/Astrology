@@ -3,8 +3,21 @@ Service layer for natal chart generation.
 """
 
 from __future__ import annotations
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from uuid import uuid4
-from src.app.core.models import NatalChartRequest, NatalChartResponse, Meta, BodyPosition, Aspect, Angles
+
+import swisseph as swe
+
+from src.app.core.models import ( 
+    NatalChartRequest, 
+    NatalChartResponse, 
+    Meta, 
+    BodyPosition, 
+    Aspect, 
+    Angles,
+)    
 
 
 class NatalChartService:
@@ -47,3 +60,27 @@ class NatalChartService:
                 )
             ],
         )
+    
+    def _to_julian_day_ut(self, req: NatalChartRequest) -> float:
+        local_dt = datetime.fromisoformat(f"{req.date}T{req.time}").replace(
+            tzinfo=ZoneInfo(req.timezone)
+        )
+
+        utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+
+        hour_decimal = (
+            utc_dt.hour
+            + utc_dt.minute / 60.0
+            + utc_dt.second / 3600.0
+            + utc_dt.microsecond / 3_600_000_000.0
+        )
+
+        jd_ut = swe.julday(
+            utc_dt.year,
+            utc_dt.month,
+            utc_dt.day,
+            hour_decimal,
+            swe.GREG_CAL,
+        )
+
+        return jd_ut

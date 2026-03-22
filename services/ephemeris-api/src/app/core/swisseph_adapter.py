@@ -39,10 +39,27 @@ class SwissEphemerisAdapter:
 
     def compute_bodies(self, jd: float) -> List[Dict]:
         """
-        Compute planetary body positions.
-        Real Swiss Ephemeris calculations will be added in the next step.
+        Compute planetary body positions from a Julian day in UT.
         """
-        raise NotImplementedError("Body calculations will be implemented next")
+        flags = swe.FLG_SWIEPH | swe.FLG_SPEED
+        bodies: List[Dict] = []
+
+        for name, body_id in BODY_MAP.items():
+            xx, retflags = swe.calc_ut(jd, body_id, flags)
+
+            longitude = swe.degnorm(xx[0])
+            speed = xx[3]
+
+            bodies.append(
+                {
+                    "name": name,
+                    "longitude": longitude,
+                    "speed": speed,
+                    "retrograde": speed < 0,
+                }
+            )
+
+        return bodies
 
     def compute_houses(
         self,
@@ -52,7 +69,17 @@ class SwissEphemerisAdapter:
         house_system: str = "placidus",
     ) -> Dict:
         """
-        Compute house cusps and angles.
-        Real Swiss Ephemeris calculations will be added in the next step.
+        Compute house cusps and key angles from a Julian day in UT.
         """
-        raise NotImplementedError("House calculations will be implemented next")
+        hsys = HOUSE_SYSTEM_MAP[house_system]
+        cusps, ascmc = swe.houses_ex(jd, latitude, longitude, hsys)
+
+        houses = [swe.degnorm(cusp) for cusp in cusps[:12]]
+        asc = swe.degnorm(ascmc[0])
+        mc = swe.degnorm(ascmc[1])
+
+        return {
+            "houses": houses,
+            "asc": asc,
+            "mc": mc,
+        }

@@ -2,14 +2,23 @@ import os
 import swisseph as swe
 from datetime import datetime
 from fastapi import FastAPI, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 from zoneinfo import ZoneInfo
 from timezonefinder import TimezoneFinder
 
+
 app = FastAPI(
     title="Geolocation",
     description="Geolocation services for retrieving location data",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 geolocator = Nominatim(user_agent="Location Data") 

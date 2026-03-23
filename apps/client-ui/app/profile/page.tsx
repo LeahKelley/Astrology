@@ -67,15 +67,49 @@ function formatDate(date: Date): string {
   });
 }
 
-function cityToCoords(city: string): { latitude: number; longitude: number } | null {
-  const lookup: Record<string, { latitude: number; longitude: number }> = {
-    "new york": { latitude: 40.7128, longitude: -74.006 },
-    "los angeles": { latitude: 34.0522, longitude: -118.2437 },
-    chicago: { latitude: 41.8781, longitude: -87.6298 },
-    houston: { latitude: 29.7604, longitude: -95.3698 },
-    london: { latitude: 51.5072, longitude: -0.1276 },
+async function fetchCoordsForCity(city: string): Promise<{ latitude: number; longitude: number }> {
+  const res = await fetch(
+    `http://127.0.0.1:8001/location/geolocation?address=${encodeURIComponent(city)}`
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Geolocation failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  const first = data["Latitude and Longitude"]?.[0];
+
+  if (!first) {
+    throw new Error("City not found by geolocation service.");
+  }
+
+  return {
+    latitude: first.latitude,
+    longitude: first.longitude,
   };
-  return lookup[city.trim().toLowerCase()] ?? null;
+}
+
+async function fetchTimezoneForCoords(
+  latitude: number,
+  longitude: number
+): Promise<string> {
+  const res = await fetch(
+    `http://127.0.0.1:8001/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Timezone lookup failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+
+  if (!data.timezone) {
+    throw new Error("Timezone not returned by geolocation service.");
+  }
+
+  return data.timezone;
 }
 
 const defaultResponse: NatalChartResponse = { bodies: [], houses: [], aspects: [] };
@@ -207,51 +241,50 @@ export default function ProfilePage() {
     "w-full rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50";
 
   async function onSubmit(data: ProfileFormData) {
-    setLoading(true);
-    setApiError("");
+  setLoading(true);
+  setApiError("");
 
-    try {
-      const coords = cityToCoords(data.city);
-      if (!coords) {
-        throw new Error(
-          "City not found in temporary test lookup. Add it to cityToCoords() or use a supported city."
-        );
-      }
+  try {
+    const coords = await fetchCoordsForCity(data.city);
+    const resolvedTimezone = await fetchTimezoneForCoords(
+      coords.latitude,
+      coords.longitude
+    );
 
-      const d = data.dateOfBirth;
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const d = data.dateOfBirth;
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-      const payload: NatalChartRequest = {
-        date: dateStr,
-        time: data.timeUnknown ? "12:00" : data.timeOfBirth,
-        timezone: data.timezone,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        city: data.city,
-        house_system: "placidus",
-      };
+    const payload: NatalChartRequest = {
+      date: dateStr,
+      time: data.timeUnknown ? "12:00" : data.timeOfBirth,
+      timezone: resolvedTimezone,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      city: data.city,
+      house_system: "placidus",
+    };
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/chart/natal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch("http://127.0.0.1:8000/api/v1/chart/natal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Request failed: ${res.status} ${text}`);
-      }
-
-      const result: NatalChartResponse = await res.json();
-      setChart(result);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setApiError(message);
-      setChart(defaultResponse);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Request failed: ${res.status} ${text}`);
     }
+
+    const result: NatalChartResponse = await res.json();
+    setChart(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    setApiError(message);
+    setChart(defaultResponse);
+  } finally {
+    setLoading(false);
   }
+}
 
   function handleReset() {
     reset();

@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { Construction } from "lucide-react";
 
 const zodiacSigns = [
@@ -13,11 +12,7 @@ export function ChartWheel({ className = "" }: { className?: string }) {
     <div className={`relative w-full aspect-square ${className}`}>
       <div className="absolute inset-0 bg-purple-600/5 blur-[120px] rounded-full" />
 
-      <motion.div
-        className="relative w-full h-full rounded-full border-2 border-github-border bg-black/20 overflow-hidden"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-      >
+      <div className="relative w-full h-full rounded-full border-2 border-github-border bg-black/20 overflow-hidden">
         {[...Array(72)].map((_, i) => (
           <div
             key={`tick-${i}`}
@@ -56,7 +51,7 @@ export function ChartWheel({ className = "" }: { className?: string }) {
 
         <div className="absolute inset-14 rounded-full border border-github-border/40 bg-github-dark/60" />
         <div className="absolute inset-28 rounded-full border border-github-border/20 bg-github-dark/80" />
-      </motion.div>
+      </div>
 
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
         <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-github-dark/90 border border-purple-500/20 backdrop-blur-sm">

@@ -1,170 +1,557 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { StarField } from "../components/StarField";
-import { Compass, Construction } from "lucide-react";
+import {
+  Check,
+  Compass,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import type {
+  Profile,
+  ProfileFormValues,
+  StoredProfile,
+} from "@/utils/supabase/types";
+import { NatalChartPlaceholder } from "../components/NatalChartPlaceholder";
+import { ProfileForm } from "../components/ProfileForm";
+import { ChartResults } from "../components/ChartResults";
+import type { NatalChartResponse } from "../components/ChartResults";
 
-const zodiacSigns = [
-  "♈", "♉", "♊", "♋", "♌", "♍",
-  "♎", "♏", "♐", "♑", "♒", "♓",
-];
+function cityToCoords(
+  city: string
+): { latitude: number; longitude: number } | null {
+  const lookup: Record<string, { latitude: number; longitude: number }> = {
+    "new york": { latitude: 40.7128, longitude: -74.006 },
+    "los angeles": { latitude: 34.0522, longitude: -118.2437 },
+    chicago: { latitude: 41.8781, longitude: -87.6298 },
+    houston: { latitude: 29.7604, longitude: -95.3698 },
+    london: { latitude: 51.5072, longitude: -0.1276 },
+  };
+  return lookup[city.trim().toLowerCase()] ?? null;
+}
+
+type UnifiedProfile = {
+  id: string;
+  first_name: string;
+  date_of_birth: string;
+  time_of_birth: string | null;
+  city_of_birth: string;
+  timezone?: string;
+  isOwn: boolean;
+};
+
+function toUnified(profile: Profile): UnifiedProfile {
+  return {
+    id: profile.id,
+    first_name: profile.first_name,
+    date_of_birth: profile.date_of_birth,
+    time_of_birth: profile.time_of_birth,
+    city_of_birth: profile.city_of_birth,
+    timezone: profile.timezone,
+    isOwn: true,
+  };
+}
+
+function storedToUnified(sp: StoredProfile): UnifiedProfile {
+  return {
+    id: sp.id,
+    first_name: sp.first_name,
+    date_of_birth: sp.date_of_birth,
+    time_of_birth: sp.time_of_birth,
+    city_of_birth: sp.city_of_birth,
+    isOwn: false,
+  };
+}
+
+function formatDisplayDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+const defaultChart: NatalChartResponse = {
+  bodies: [],
+  houses: [],
+  aspects: [],
+};
 
 export default function NatalChartPage() {
+  const supabase = createClient();
+
+  const [ownProfile, setOwnProfile] = useState<Profile | null>(null);
+  const [storedProfiles, setStoredProfiles] = useState<StoredProfile[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [chart, setChart] = useState<NatalChartResponse>(defaultChart);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState("");
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+
+  const allProfiles = useMemo(() => {
+    const list: UnifiedProfile[] = [];
+    if (ownProfile) list.push(toUnified(ownProfile));
+    list.push(...storedProfiles.map(storedToUnified));
+    return list;
+  }, [ownProfile, storedProfiles]);
+
+  const selectedProfile = useMemo(
+    () => allProfiles.find((p) => p.id === selectedId) ?? null,
+    [allProfiles, selectedId]
+  );
+
+  const editingProfile = useMemo(() => {
+    if (!editingId) return null;
+    return allProfiles.find((p) => p.id === editingId) ?? null;
+  }, [allProfiles, editingId]);
+
+  const loadProfiles = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setAuthenticated(false);
+      return;
+    }
+    setAuthenticated(true);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profile) setOwnProfile(profile as Profile);
+
+    const { data: stored } = await supabase
+      .from("stored_profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (stored) setStoredProfiles(stored as StoredProfile[]);
+  }, [supabase]);
+
+  useEffect(() => {
+    loadProfiles();
+  }, [loadProfiles]);
+
+  async function fetchChart(profile: UnifiedProfile) {
+    setChartLoading(true);
+    setChartError("");
+    try {
+      const coords = cityToCoords(profile.city_of_birth);
+      if (!coords) {
+        throw new Error(
+          `City "${profile.city_of_birth}" not found. Supported: New York, Los Angeles, Chicago, Houston, London.`
+        );
+      }
+
+      const payload = {
+        date: profile.date_of_birth,
+        time: profile.time_of_birth || "12:00",
+        timezone: profile.timezone || "America/New_York",
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        city: profile.city_of_birth,
+        house_system: "placidus",
+      };
+
+      const res = await fetch("http://127.0.0.1:8000/api/v1/chart/natal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Request failed: ${res.status} ${text}`);
+      }
+
+      const result: NatalChartResponse = await res.json();
+      setChart(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setChartError(message);
+      setChart(defaultChart);
+    } finally {
+      setChartLoading(false);
+    }
+  }
+
+  function handleSelect(id: string) {
+    setSelectedId(id);
+    const profile = allProfiles.find((p) => p.id === id);
+    if (profile) fetchChart(profile);
+  }
+
+  function formValuesFromProfile(
+    p: UnifiedProfile
+  ): Partial<ProfileFormValues> {
+    const [y, m, d] = p.date_of_birth.split("-").map(Number);
+    return {
+      firstName: p.first_name,
+      dateOfBirth: new Date(y, m - 1, d),
+      timeOfBirth: p.time_of_birth ?? "",
+      city: p.city_of_birth,
+      timezone: p.timezone || "America/New_York",
+    };
+  }
+
+  async function handleCreateProfile(data: ProfileFormValues) {
+    setFormLoading(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const d = data.dateOfBirth!;
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      const { error } = await supabase.from("stored_profiles").insert({
+        user_id: user.id,
+        first_name: data.firstName,
+        date_of_birth: dateStr,
+        time_of_birth: data.timeOfBirth || null,
+        city_of_birth: data.city,
+      });
+
+      if (error) throw error;
+
+      await loadProfiles();
+      setShowForm(false);
+    } finally {
+      setFormLoading(false);
+    }
+  }
+
+  async function handleUpdateProfile(data: ProfileFormValues) {
+    if (!editingId) return;
+    setFormLoading(true);
+    try {
+      const d = data.dateOfBirth!;
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      const isOwn = editingProfile?.isOwn;
+      const table = isOwn ? "profiles" : "stored_profiles";
+
+      const updateData: Record<string, unknown> = {
+        first_name: data.firstName,
+        date_of_birth: dateStr,
+        time_of_birth: data.timeOfBirth || null,
+        city_of_birth: data.city,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (isOwn) {
+        updateData.timezone = data.timezone;
+      }
+
+      const { error } = await supabase
+        .from(table)
+        .update(updateData)
+        .eq("id", editingId);
+
+      if (error) throw error;
+
+      await loadProfiles();
+      setEditingId(null);
+
+      if (selectedId === editingId) {
+        const updated = allProfiles.find((p) => p.id === editingId);
+        if (updated) fetchChart(updated);
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  }
+
+  async function handleDeleteProfile(id: string) {
+    const profile = allProfiles.find((p) => p.id === id);
+    if (!profile || profile.isOwn) return;
+
+    const { error } = await supabase
+      .from("stored_profiles")
+      .delete()
+      .eq("id", id);
+
+    if (error) return;
+
+    if (selectedId === id) {
+      setSelectedId(null);
+      setChart(defaultChart);
+    }
+    await loadProfiles();
+  }
+
   return (
     <div className="min-h-screen bg-github-dark relative">
-      <StarField />
-
-      <main className="relative pt-32 pb-20 px-6">
-        <div className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] bg-purple-900/10 blur-[150px] rounded-full animate-pulse" />
-        <div
-          className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-900/10 blur-[150px] rounded-full animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
-
-        <div className="max-w-5xl mx-auto relative">
+      <main className="relative pt-28 pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-semibold uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-semibold uppercase tracking-widest mb-4">
               <Compass className="w-3.5 h-3.5" />
               Natal Chart
             </div>
-            <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight mb-6">
+            <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight">
               Your Cosmic{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
                 Blueprint
               </span>
             </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-              exercitation ullamco laboris.
-            </p>
           </motion.div>
 
-          {/* Chart placeholder */}
-          <motion.div
-            className="flex justify-center mb-16"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <div className="relative w-full max-w-[520px] aspect-square">
-              <div className="absolute inset-0 bg-purple-600/5 blur-[120px] rounded-full" />
+          {/* Top area: Chart (left) + Form or selection info (right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Left — Chart Placeholder */}
+            <motion.div
+              className="flex items-center justify-center"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <NatalChartPlaceholder />
+            </motion.div>
 
-              {/* Outer ring */}
-              <motion.div
-                className="relative w-full h-full rounded-full border-2 border-github-border bg-black/20 overflow-hidden"
-                animate={{ rotate: -360 }}
-                transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-              >
-                {/* Degree ticks */}
-                {[...Array(72)].map((_, i) => (
-                  <div
-                    key={`tick-${i}`}
-                    className="absolute inset-0"
-                    style={{ transform: `rotate(${i * 5}deg)` }}
+            {/* Right — Form area */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {authenticated === false && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
+                  <p className="text-gray-400 mb-4">
+                    Sign in to save and manage profiles.
+                  </p>
+                  <a
+                    href="/sign-in"
+                    className="inline-block rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-500"
                   >
+                    Sign in
+                  </a>
+                </div>
+              )}
+
+              {authenticated && !showForm && !editingId && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold">Add a Profile</h2>
+                  </div>
+                  <p className="text-sm text-gray-400 mb-5">
+                    Create a profile to generate a natal chart. Enter birth
+                    details and we&apos;ll compute planetary positions.
+                  </p>
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-500 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Profile
+                  </button>
+                </div>
+              )}
+
+              {authenticated && showForm && !editingId && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+                  <h2 className="text-lg font-bold mb-4">New Profile</h2>
+                  <ProfileForm
+                    onSubmit={handleCreateProfile}
+                    submitLabel="Create Profile"
+                    loading={formLoading}
+                    onCancel={() => setShowForm(false)}
+                  />
+                </div>
+              )}
+
+              {authenticated && editingId && editingProfile && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+                  <h2 className="text-lg font-bold mb-4">
+                    Edit {editingProfile.first_name}
+                  </h2>
+                  <ProfileForm
+                    defaultValues={formValuesFromProfile(editingProfile)}
+                    onSubmit={handleUpdateProfile}
+                    submitLabel="Update"
+                    loading={formLoading}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Selected profile indicator + chart results */}
+          {selectedProfile && (
+            <motion.div
+              className="mb-12"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Check className="w-4 h-4 text-purple-400" />
+                <span className="text-sm text-gray-400">
+                  Viewing chart for{" "}
+                  <strong className="text-white">
+                    {selectedProfile.first_name}
+                  </strong>
+                </span>
+              </div>
+
+              {chartError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 mb-4">
+                  {chartError}
+                </div>
+              )}
+
+              {chartLoading ? (
+                <div className="rounded-lg border border-white/10 bg-white/[0.02] p-8 text-center">
+                  <p className="text-sm text-gray-500">
+                    Loading chart data…
+                  </p>
+                </div>
+              ) : (
+                <ChartResults
+                  chart={chart}
+                  profileName={selectedProfile.first_name}
+                />
+              )}
+            </motion.div>
+          )}
+
+          {/* Profile list */}
+          {authenticated && allProfiles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Saved Profiles</h2>
+                {!showForm && !editingId && (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allProfiles.map((profile) => {
+                  const isSelected = selectedId === profile.id;
+                  return (
                     <div
-                      className={`absolute top-0 left-1/2 -translate-x-1/2 w-px bg-github-border/30 ${i % 6 === 0 ? "h-5" : "h-2"
-                        }`}
-                    />
-                  </div>
-                ))}
+                      key={profile.id}
+                      onClick={() => handleSelect(profile.id)}
+                      className={`relative rounded-xl border p-5 transition-all cursor-pointer group ${
+                        isSelected
+                          ? "border-purple-500 bg-purple-500/10 ring-1 ring-purple-500/30"
+                          : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-3 right-3">
+                          <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
+                      )}
 
-                {/* Zodiac glyphs */}
-                {zodiacSigns.map((sign, i) => (
-                  <div
-                    key={`sign-${i}`}
-                    className="absolute inset-0"
-                    style={{ transform: `rotate(${i * 30 + 15}deg)` }}
-                  >
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 text-sm text-gray-500 font-bold">
-                      {sign}
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3 className="text-sm font-bold">
+                          {profile.first_name}
+                        </h3>
+                        {profile.isOwn && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full px-2 py-0.5">
+                            You
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1 text-xs text-gray-400">
+                        <p>
+                          Born {formatDisplayDate(profile.date_of_birth)}
+                        </p>
+                        {profile.time_of_birth && (
+                          <p>at {profile.time_of_birth}</p>
+                        )}
+                        <p>{profile.city_of_birth}</p>
+                      </div>
+
+                      {/* Actions */}
+                      <div
+                        className="flex gap-1.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => {
+                            setEditingId(profile.id);
+                            setShowForm(false);
+                          }}
+                          className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Edit
+                        </button>
+                        {!profile.isOwn && (
+                          <button
+                            onClick={() => handleDeleteProfile(profile.id)}
+                            className="flex items-center gap-1 rounded-md border border-red-500/20 bg-red-500/5 px-2 py-1 text-[11px] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {/* House dividers */}
-                {[...Array(12)].map((_, i) => (
-                  <div
-                    key={`house-${i}`}
-                    className="absolute inset-0"
-                    style={{ transform: `rotate(${i * 30}deg)` }}
-                  >
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-github-border/15" />
-                  </div>
-                ))}
-
-                {/* Inner ring */}
-                <div className="absolute inset-14 rounded-full border border-github-border/40 bg-github-dark/60" />
-
-                {/* Innermost ring */}
-                <div className="absolute inset-28 rounded-full border border-github-border/20 bg-github-dark/80" />
-              </motion.div>
-
-              {/* Center label — counter-rotates to stay still */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-github-dark/90 border border-purple-500/20 backdrop-blur-sm">
-                  <Construction className="w-5 h-5 text-purple-400" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-purple-300">
-                    Work in Progress
-                  </span>
-                </div>
+                  );
+                })}
               </div>
+            </motion.div>
+          )}
 
-              {/* Axis labels */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-10 text-[10px] font-mono text-gray-600 font-bold">
-                  ASC
-                </div>
-                <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-10 text-[10px] font-mono text-gray-600 font-bold">
-                  DSC
-                </div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-10 text-[10px] font-mono text-gray-600 font-bold">
-                  MC
-                </div>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-10 text-[10px] font-mono text-gray-600 font-bold">
-                  IC
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Description cards */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-          >
-            {[
-              {
-                title: "Generate Your Chart",
-                desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-              },
-              {
-                title: "Explore Placements",
-                desc: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-              },
-              {
-                title: "Understand Aspects",
-                desc: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
-              },
-            ].map((card) => (
-              <div
-                key={card.title}
-                className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6"
+          {/* Empty state for authenticated users with no profiles */}
+          {authenticated && allProfiles.length === 0 && !showForm && (
+            <motion.div
+              className="text-center py-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <p className="text-gray-500 mb-4">
+                No profiles yet. Create one to get started.
+              </p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-500 cursor-pointer"
               >
-                <h3 className="text-sm font-bold mb-2">{card.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{card.desc}</p>
-              </div>
-            ))}
-          </motion.div>
+                <Plus className="w-4 h-4" />
+                Create Your First Profile
+              </button>
+            </motion.div>
+          )}
         </div>
       </main>
     </div>

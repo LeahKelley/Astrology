@@ -15,7 +15,7 @@ import type {
   ProfileFormValues,
   StoredProfile,
 } from "@/utils/supabase/types";
-import { NatalChartPlaceholder } from "../components/NatalChartPlaceholder";
+import { ChartWheel } from "../components/ChartWheel";
 import { ProfileForm } from "../components/ProfileForm";
 import { ChartResults } from "../components/ChartResults";
 import type { NatalChartResponse } from "../components/ChartResults";
@@ -355,7 +355,7 @@ export default function NatalChartPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <NatalChartPlaceholder />
+              <ChartWheel chart={chart} size={500} />
             </motion.div>
 
             {/* Right — Form area */}

@@ -1,86 +1,99 @@
 "use client";
 
-import { motion } from "motion/react";
-import { Construction } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { NatalChartPlaceholder } from "./NatalChartPlaceholder";
+import type { NatalChartResponse } from "./ChartResults";
 
-const zodiacSigns = [
-  "♈", "♉", "♊", "♋", "♌", "♍",
-  "♎", "♏", "♐", "♑", "♒", "♓",
-];
+const DARK_SETTINGS = {
+  COLOR_BACKGROUND: "transparent",
+  CIRCLE_COLOR: "#6b7280",
+  LINE_COLOR: "#6b7280",
+  POINTS_COLOR: "#e5e7eb",
+  POINTS_TEXT_SIZE: 9,
+  POINTS_STROKE: 1.5,
+  SIGNS_COLOR: "#e5e7eb",
+  SIGNS_STROKE: 1.2,
+  SYMBOL_AXIS_FONT_COLOR: "#a78bfa",
+  SYMBOL_AXIS_STROKE: 1.6,
+  CUSPS_FONT_COLOR: "#9ca3af",
+  CUSPS_STROKE: 0.7,
+  COLORS_SIGNS: [
+    "#f87171", "#fb923c", "#fbbf24", "#4ade80",
+    "#f87171", "#fb923c", "#fbbf24", "#4ade80",
+    "#f87171", "#fb923c", "#fbbf24", "#4ade80",
+  ],
+  COLORS_ASPECTS: [
+    "#a78bfa", // conjunction
+    "#60a5fa", // opposition
+    "#f87171", // square
+    "#34d399", // trine
+    "#60a5fa", // sextile
+  ],
+};
 
-export function ChartWheel({ className = "" }: { className?: string }) {
+type Props = {
+  chart: NatalChartResponse;
+  size?: number;
+};
+
+export function ChartWheel({ chart, size = 500 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const idRef = useRef(`astrochart-${Math.random().toString(36).slice(2)}`);
+
+  const hasData = chart.bodies.length > 0 && chart.houses.length === 12;
+
+  useEffect(() => {
+    if (!hasData || !containerRef.current) return;
+
+    import("@astrodraw/astrochart").then(({ Chart }) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Clear any previous render
+      container.innerHTML = "";
+
+      // Re-attach a fresh div with the stable ID so the library can find it
+      const inner = document.createElement("div");
+      inner.id = idRef.current;
+      container.appendChild(inner);
+
+      // Build planets object — library expects { Name: [longitude, speed?] }
+      const planets: Record<string, number[]> = {};
+      for (const body of chart.bodies) {
+        planets[body.name] = [body.longitude, body.speed ?? 0];
+      }
+
+      const data = {
+        planets,
+        cusps: chart.houses,
+      };
+
+      const radix = new Chart(idRef.current, size, size, DARK_SETTINGS).radix(data);
+
+      // Add ASC / DSC / MC / IC as labelled axis points
+      if (chart.angles) {
+        const { asc, mc } = chart.angles;
+        radix.addPointsOfInterest({
+          As: [asc],
+          Ds: [(asc + 180) % 360],
+          Mc: [mc],
+          Ic: [(mc + 180) % 360],
+        });
+      }
+
+      radix.aspects();
+    });
+  }, [chart, hasData, size]);
+
+  if (!hasData) {
+    return <NatalChartPlaceholder />;
+  }
+
   return (
-    <div className={`relative w-full aspect-square ${className}`}>
-      <div className="absolute inset-0 bg-purple-600/5 blur-[120px] rounded-full" />
-
-      <motion.div
-        className="relative w-full h-full rounded-full border-2 border-github-border bg-black/20 overflow-hidden"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-      >
-        {[...Array(72)].map((_, i) => (
-          <div
-            key={`tick-${i}`}
-            className="absolute inset-0"
-            style={{ transform: `rotate(${i * 5}deg)` }}
-          >
-            <div
-              className={`absolute top-0 left-1/2 -translate-x-1/2 w-px bg-github-border/30 ${
-                i % 6 === 0 ? "h-5" : "h-2"
-              }`}
-            />
-          </div>
-        ))}
-
-        {zodiacSigns.map((sign, i) => (
-          <div
-            key={`sign-${i}`}
-            className="absolute inset-0"
-            style={{ transform: `rotate(${i * 30 + 15}deg)` }}
-          >
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 text-sm text-gray-500 font-bold">
-              {sign}
-            </div>
-          </div>
-        ))}
-
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={`house-${i}`}
-            className="absolute inset-0"
-            style={{ transform: `rotate(${i * 30}deg)` }}
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-github-border/15" />
-          </div>
-        ))}
-
-        <div className="absolute inset-14 rounded-full border border-github-border/40 bg-github-dark/60" />
-        <div className="absolute inset-28 rounded-full border border-github-border/20 bg-github-dark/80" />
-      </motion.div>
-
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-github-dark/90 border border-purple-500/20 backdrop-blur-sm">
-          <Construction className="w-5 h-5 text-purple-400" />
-          <span className="text-xs font-bold uppercase tracking-widest text-purple-300">
-            Work in Progress
-          </span>
-        </div>
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-10 text-[10px] font-mono text-gray-600 font-bold">
-          ASC
-        </div>
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-10 text-[10px] font-mono text-gray-600 font-bold">
-          DSC
-        </div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-10 text-[10px] font-mono text-gray-600 font-bold">
-          MC
-        </div>
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-10 text-[10px] font-mono text-gray-600 font-bold">
-          IC
-        </div>
-      </div>
-    </div>
+    <div
+      ref={containerRef}
+      style={{ width: size, height: size }}
+      className="mx-auto"
+    />
   );
 }

@@ -48,7 +48,7 @@ export const Navbar = () => {
   }
 
   const navLinkClass =
-    "hover:text-white transition-colors flex items-center gap-2 text-sm font-medium text-gray-400";
+    "hover:text-white transition-colors flex items-center gap-2 text-sm font-medium text-gray-400 cursor-pointer";
 
   return (
     <nav

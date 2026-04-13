@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { ChevronDown, Moon } from "lucide-react";
 import { PlaceholderCard } from "./components/Envelope";
-import { ChartWheel } from "./components/ChartWheel";
+import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
 import { StarField } from "./components/StarField";
 
 export default function Home() {
@@ -32,16 +32,15 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight mb-6">
-                Placeholder{" "}
+                My{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
                   Astrology
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-relaxed">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
+                Discover your cosmic blueprint. Enter your birth details and
+                MyAstrology computes your natal chart — planetary positions,
+                house placements, and aspects — powered by Swiss Ephemeris.
               </p>
             </motion.div>
 
@@ -52,10 +51,10 @@ export default function Home() {
               transition={{ delay: 0.3 }}
             >
               <Link
-                href="/faq"
+                href="/natal"
                 className="border border-github-border hover:bg-white/5 text-white px-6 py-2.5 rounded-md font-semibold transition-all"
               >
-                Learn more
+                Generate your chart
               </Link>
             </motion.div>
 
@@ -71,13 +70,13 @@ export default function Home() {
                 </div>
               </motion.div>
               <p className="text-xs text-gray-500 max-w-xs font-medium uppercase tracking-widest">
-                lorem
+                Your cosmic blueprint awaits
               </p>
             </div>
           </div>
 
           <div className="lg:col-span-3 flex justify-center lg:justify-end order-3">
-            <ChartWheel className="max-w-[320px]" />
+            <NatalChartPlaceholder />
           </div>
         </div>
 
@@ -96,26 +95,29 @@ export default function Home() {
       <section className="bg-github-dark border-t border-github-border py-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
           <div className="space-y-4">
-            <h3 className="text-lg font-display font-bold">Lorem Ipsum</h3>
+            <h3 className="text-lg font-display font-bold">Natal Chart</h3>
             <p className="text-sm text-gray-400">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              A natal chart is a snapshot of the sky at the exact moment of your
+              birth. It maps the positions of the planets across the twelve
+              zodiac signs and houses.
             </p>
           </div>
           <div className="space-y-4">
-            <h3 className="text-lg font-display font-bold">Dolor Sit Amet</h3>
+            <h3 className="text-lg font-display font-bold">Planetary Positions</h3>
             <p className="text-sm text-gray-400">
-              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
+              See where the Sun, Moon, and every planet were placed at your
+              birth — including sign, degree, house, and whether each body was
+              in retrograde.
             </p>
           </div>
           <div className="space-y-4">
             <h3 className="text-lg font-display font-bold">
-              Consectetur Adipiscing
+              Houses &amp; Aspects
             </h3>
             <p className="text-sm text-gray-400">
-              Duis aute irure dolor in reprehenderit in voluptate velit esse
-              cillum dolore eu fugiat nulla pariatur.
+              Explore your twelve house cusps and the angular relationships
+              between planets — conjunctions, oppositions, trines, squares, and
+              sextiles — calculated with Swiss Ephemeris precision.
             </p>
           </div>
         </div>

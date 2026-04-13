@@ -64,7 +64,7 @@ export const Navbar = () => {
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="text-xl font-display font-bold tracking-tight">
-            Placeholder
+            MyAstrology
           </span>
         </Link>
 

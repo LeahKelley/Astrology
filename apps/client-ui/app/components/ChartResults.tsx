@@ -18,6 +18,7 @@ type Aspect = {
 
 export type NatalChartResponse = {
   meta?: { request_id?: string; generated_at?: string };
+  angles?: { asc: number; mc: number };
   bodies: Body[];
   houses: number[];
   aspects: Aspect[];
@@ -85,33 +86,54 @@ export function ChartResults({ chart, profileName }: ChartResultsProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {hasBodies && (
-          <Panel title="Planet Positions">
-            <table className="w-full">
-              <tbody>
-                {chart.bodies.map((body) => (
-                  <tr
-                    key={body.name}
-                    className="border-b border-white/5 last:border-0"
-                  >
-                    <td className="py-1.5 pr-3 text-sm text-purple-300 font-medium">
-                      {body.name}
-                    </td>
-                    <td className="py-1.5 pr-3 text-sm text-gray-300">
-                      {formatDegree(body.degree_in_sign)}
-                    </td>
-                    <td className="py-1.5 pr-3 text-sm text-gray-300">
-                      {body.sign}
-                    </td>
-                    <td className="py-1.5 text-sm text-red-400">
-                      {body.retrograde ? "R" : ""}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Panel>
-        )}
+        {hasBodies && (() => {
+          type BodyRow = { kind: "body"; body: Body };
+          type AngleRow = { kind: "angle"; label: string; longitude: number };
+          type Row = BodyRow | AngleRow;
+
+          const rows: Row[] = [];
+          for (const body of chart.bodies) {
+            rows.push({ kind: "body", body });
+            if (body.name === "Moon" && chart.angles) {
+              rows.push({ kind: "angle", label: "ASC", longitude: chart.angles.asc });
+            }
+          }
+          if (chart.angles) {
+            rows.push({ kind: "angle", label: "DSC", longitude: (chart.angles.asc + 180) % 360 });
+            rows.push({ kind: "angle", label: "MC",  longitude: chart.angles.mc });
+            rows.push({ kind: "angle", label: "IC",  longitude: (chart.angles.mc + 180) % 360 });
+          }
+
+          return (
+            <Panel title="Planet Positions">
+              <table className="w-full">
+                <tbody>
+                  {rows.map((row) => {
+                    if (row.kind === "angle") {
+                      const { sign, degree } = longitudeToSignDegree(row.longitude);
+                      return (
+                        <tr key={row.label} className="border-b border-white/5 last:border-0">
+                          <td className="py-1.5 pr-3 text-sm text-blue-300 font-medium">{row.label}</td>
+                          <td className="py-1.5 pr-3 text-sm text-gray-300">{degree}</td>
+                          <td className="py-1.5 pr-3 text-sm text-gray-300">{sign}</td>
+                          <td />
+                        </tr>
+                      );
+                    }
+                    return (
+                      <tr key={row.body.name} className="border-b border-white/5 last:border-0">
+                        <td className="py-1.5 pr-3 text-sm text-purple-300 font-medium">{row.body.name}</td>
+                        <td className="py-1.5 pr-3 text-sm text-gray-300">{formatDegree(row.body.degree_in_sign)}</td>
+                        <td className="py-1.5 pr-3 text-sm text-gray-300">{row.body.sign}</td>
+                        <td className="py-1.5 text-sm text-red-400">{row.body.retrograde ? "R" : ""}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Panel>
+          );
+        })()}
 
         {hasBodies && chart.bodies.some((b) => typeof b.house === "number") && (
           <Panel title="Planets in Houses">

@@ -8,7 +8,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import type {
@@ -21,17 +20,48 @@ import { ProfileForm } from "../components/ProfileForm";
 import { ChartResults } from "../components/ChartResults";
 import type { NatalChartResponse } from "../components/ChartResults";
 
-function cityToCoords(
+async function fetchCoordsForCity(
   city: string
-): { latitude: number; longitude: number } | null {
-  const lookup: Record<string, { latitude: number; longitude: number }> = {
-    "new york": { latitude: 40.7128, longitude: -74.006 },
-    "los angeles": { latitude: 34.0522, longitude: -118.2437 },
-    chicago: { latitude: 41.8781, longitude: -87.6298 },
-    houston: { latitude: 29.7604, longitude: -95.3698 },
-    london: { latitude: 51.5072, longitude: -0.1276 },
-  };
-  return lookup[city.trim().toLowerCase()] ?? null;
+): Promise<{ latitude: number; longitude: number }> {
+  const res = await fetch(
+    `http://127.0.0.1:8001/location/geolocation?address=${encodeURIComponent(city)}`
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Geolocation failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  const first = data["Latitude and Longitude"]?.[0];
+
+  if (!first) {
+    throw new Error("City not found by geolocation service.");
+  }
+
+  return { latitude: first.latitude, longitude: first.longitude };
+}
+
+async function fetchTimezoneForCoords(
+  latitude: number,
+  longitude: number
+): Promise<string> {
+  const res = await fetch(
+    `http://127.0.0.1:8001/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Timezone lookup failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+
+  if (!data.timezone) {
+    throw new Error("Timezone not returned by geolocation service.");
+  }
+
+  return data.timezone;
 }
 
 type UnifiedProfile = {
@@ -149,17 +179,16 @@ export default function NatalChartPage() {
     setChartLoading(true);
     setChartError("");
     try {
-      const coords = cityToCoords(profile.city_of_birth);
-      if (!coords) {
-        throw new Error(
-          `City "${profile.city_of_birth}" not found. Supported: New York, Los Angeles, Chicago, Houston, London.`
-        );
-      }
+      const coords = await fetchCoordsForCity(profile.city_of_birth);
+      const resolvedTimezone = await fetchTimezoneForCoords(
+        coords.latitude,
+        coords.longitude
+      );
 
       const payload = {
         date: profile.date_of_birth,
         time: profile.time_of_birth || "12:00",
-        timezone: profile.timezone || "America/New_York",
+        timezone: resolvedTimezone,
         latitude: coords.latitude,
         longitude: coords.longitude,
         city: profile.city_of_birth,
@@ -498,7 +527,6 @@ export default function NatalChartPage() {
                         <p>{profile.city_of_birth}</p>
                       </div>
 
-                      {/* Actions */}
                       <div
                         className="flex gap-1.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}

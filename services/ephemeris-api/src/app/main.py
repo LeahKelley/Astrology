@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.app.api.routes import api_router
 from src.app.core.logging import configure_logging
 
-
 def create_app() -> FastAPI:
     """Factory function to create and configure the FastAPI app."""
     configure_logging()

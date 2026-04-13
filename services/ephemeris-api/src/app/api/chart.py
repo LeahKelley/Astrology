@@ -7,5 +7,5 @@ router = APIRouter()
 @router.post("/chart/natal", response_model=NatalChartResponse)
 def generate_chart(request: NatalChartRequest):
     service = NatalChartService()
-    result = service.generate_mock(request)
+    result = service.generate(request)
     return result

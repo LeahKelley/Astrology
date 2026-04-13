@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 
-
-
 export const NatalChartPlaceholder = () => {
   const [isHovered, setIsHovered] = useState(false);
 

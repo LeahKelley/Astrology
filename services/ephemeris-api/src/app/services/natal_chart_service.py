@@ -61,7 +61,7 @@ class NatalChartService:
             house_system=req.house_system,
         )
 
-        bodies = [self._to_body_position(item) for item in raw_bodies]
+        bodies = [self._to_body_position(item, raw_houses["houses"]) for item in raw_bodies]
         aspects = self._compute_aspects(bodies)
 
         return NatalChartResponse(
@@ -143,7 +143,19 @@ class NatalChartService:
 
         return jd_ut
 
-    def _to_body_position(self, item: dict) -> BodyPosition:
+    def _assign_house(self, longitude: float, cusps: list[float]) -> int:
+        for i in range(12):
+            start = cusps[i]
+            end = cusps[(i + 1) % 12]
+            if start <= end:
+                if start <= longitude < end:
+                    return i + 1
+            else:  # wraps around 0/360
+                if longitude >= start or longitude < end:
+                    return i + 1
+        return 1  # fallback
+
+    def _to_body_position(self, item: dict, cusps: list[float]) -> BodyPosition:
         longitude = item["longitude"]
         sign_index = int(longitude // 30)
         sign = SIGNS[sign_index]
@@ -156,6 +168,7 @@ class NatalChartService:
             degree_in_sign=degree_in_sign,
             speed=item["speed"],
             retrograde=item["retrograde"],
+            house=self._assign_house(longitude, cusps),
         )
 
     def _compute_aspects(self, bodies: list[BodyPosition]) -> list[Aspect]:

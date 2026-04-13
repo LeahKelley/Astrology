@@ -23,11 +23,22 @@ export type NatalChartResponse = {
   aspects: Aspect[];
 };
 
+const SIGNS = [
+  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+];
+
 function formatDegree(value: number): string {
   const deg = Math.floor(value);
   const min = Math.round((value - deg) * 60);
   const safeMin = min === 60 ? 59 : min;
   return `${deg}°${safeMin.toString().padStart(2, "0")}'`;
+}
+
+function longitudeToSignDegree(longitude: number): { sign: string; degree: string } {
+  const signIndex = Math.floor(longitude / 30) % 12;
+  const degreeInSign = longitude % 30;
+  return { sign: SIGNS[signIndex], degree: formatDegree(degreeInSign) };
 }
 
 function Panel({
@@ -130,19 +141,21 @@ export function ChartResults({ chart, profileName }: ChartResultsProps) {
           <Panel title="House Cusps">
             <table className="w-full">
               <tbody>
-                {chart.houses.map((cusp, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-white/5 last:border-0"
-                  >
-                    <td className="py-1.5 pr-3 text-sm text-purple-300 font-medium">
-                      House {idx + 1}
-                    </td>
-                    <td className="py-1.5 text-sm text-gray-300">
-                      {cusp.toFixed(2)}°
-                    </td>
-                  </tr>
-                ))}
+                {chart.houses.map((cusp, idx) => {
+                  const { sign, degree } = longitudeToSignDegree(cusp);
+                  return (
+                    <tr
+                      key={idx}
+                      className="border-b border-white/5 last:border-0"
+                    >
+                      <td className="py-1.5 pr-3 text-sm text-purple-300 font-medium">
+                        House {idx + 1}
+                      </td>
+                      <td className="py-1.5 pr-3 text-sm text-gray-300">{degree}</td>
+                      <td className="py-1.5 text-sm text-gray-300">{sign}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </Panel>

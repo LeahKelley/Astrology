@@ -40,6 +40,7 @@ class BodyPosition(BaseModel):
     degree_in_sign: float = Field(..., ge=0, lt=30)
     speed: float
     retrograde: bool
+    house: int | None = Field(default=None, ge=1, le=12)
 
 class Aspect(BaseModel):
     a: BodyName

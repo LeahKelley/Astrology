@@ -7,6 +7,7 @@ type Body = {
   degree_in_sign: number;
   retrograde: boolean;
   house?: number;
+  speed?: number;
 };
 
 type Aspect = {

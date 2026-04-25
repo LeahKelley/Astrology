@@ -64,9 +64,9 @@ func handlePlanet(w http.ResponseWriter, r *http.Request) {
 	name = strings.ToUpper(name[:1]) + strings.ToLower(name[1:])
 	// Special cases for multi-word names
 	switch strings.ToLower(name) {
-	case "asc", "ascendant":
+	case "asc", "ascendant", "as":
 		name = "ASC"
-	case "dsc", "descendant":
+	case "dsc", "descendant", "ds":
 		name = "DSC"
 	case "mc", "midheaven":
 		name = "MC"

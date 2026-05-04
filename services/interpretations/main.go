@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+
 func main() {
 	mux := http.NewServeMux()
 
@@ -21,6 +22,11 @@ func main() {
 	mux.HandleFunc("/interpret/sign/", handleSign)
 	mux.HandleFunc("/interpret/house/", handleHouse)
 	mux.HandleFunc("/interpret/aspect/", handleAspect)
+
+	mux.HandleFunc("/interpret/combo/planet-in-sign", handlePlanetInSign)
+	mux.HandleFunc("/interpret/combo/planet-in-house", handlePlanetInHouse)
+	mux.HandleFunc("/interpret/combo/house-cusp", handleHouseCusp)
+	mux.HandleFunc("/interpret/combo/aspect", handleAspectCombo)
 
 	log.Println("Interpretations service listening on :8002")
 	log.Fatal(http.ListenAndServe(":8002", corsMiddleware(mux)))
@@ -146,4 +152,77 @@ func handleAllHouses(w http.ResponseWriter, r *http.Request) {
 
 func handleAllAspects(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, aspects)
+}
+
+func handlePlanetInSign(w http.ResponseWriter, r *http.Request) {
+	planet := strings.TrimSpace(r.URL.Query().Get("planet"))
+	sign := strings.TrimSpace(r.URL.Query().Get("sign"))
+	if planet == "" || sign == "" {
+		writeError(w, http.StatusBadRequest, "planet and sign are required")
+		return
+	}
+	planet = normalizePlanet(planet)
+	sign = strings.ToUpper(sign[:1]) + strings.ToLower(sign[1:])
+	retrograde := strings.ToLower(r.URL.Query().Get("retrograde")) == "true"
+	writeJSON(w, http.StatusOK, composePlanetInSign(planet, sign, retrograde))
+}
+
+func handlePlanetInHouse(w http.ResponseWriter, r *http.Request) {
+	planet := strings.TrimSpace(r.URL.Query().Get("planet"))
+	houseStr := strings.TrimSpace(r.URL.Query().Get("house"))
+	if planet == "" || houseStr == "" {
+		writeError(w, http.StatusBadRequest, "planet and house are required")
+		return
+	}
+	houseNum, err := strconv.Atoi(houseStr)
+	if err != nil || houseNum < 1 || houseNum > 12 {
+		writeError(w, http.StatusBadRequest, "house must be 1–12")
+		return
+	}
+	planet = normalizePlanet(planet)
+	writeJSON(w, http.StatusOK, composePlanetInHouse(planet, houseNum))
+}
+
+func handleHouseCusp(w http.ResponseWriter, r *http.Request) {
+	houseStr := strings.TrimSpace(r.URL.Query().Get("house"))
+	sign := strings.TrimSpace(r.URL.Query().Get("sign"))
+	if houseStr == "" || sign == "" {
+		writeError(w, http.StatusBadRequest, "house and sign are required")
+		return
+	}
+	houseNum, err := strconv.Atoi(houseStr)
+	if err != nil || houseNum < 1 || houseNum > 12 {
+		writeError(w, http.StatusBadRequest, "house must be 1–12")
+		return
+	}
+	sign = strings.ToUpper(sign[:1]) + strings.ToLower(sign[1:])
+	writeJSON(w, http.StatusOK, composeHouseCusp(houseNum, sign))
+}
+
+func handleAspectCombo(w http.ResponseWriter, r *http.Request) {
+	planet1 := strings.TrimSpace(r.URL.Query().Get("planet1"))
+	aspectType := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("aspect")))
+	planet2 := strings.TrimSpace(r.URL.Query().Get("planet2"))
+	if planet1 == "" || aspectType == "" || planet2 == "" {
+		writeError(w, http.StatusBadRequest, "planet1, aspect, and planet2 are required")
+		return
+	}
+	planet1 = normalizePlanet(planet1)
+	planet2 = normalizePlanet(planet2)
+	writeJSON(w, http.StatusOK, composeAspectCombo(planet1, aspectType, planet2))
+}
+
+func normalizePlanet(name string) string {
+	switch strings.ToLower(name) {
+	case "asc", "ascendant", "as":
+		return "ASC"
+	case "dsc", "descendant", "ds":
+		return "DSC"
+	case "mc", "midheaven":
+		return "MC"
+	case "ic":
+		return "IC"
+	default:
+		return strings.ToUpper(name[:1]) + strings.ToLower(name[1:])
+	}
 }

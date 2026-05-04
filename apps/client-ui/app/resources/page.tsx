@@ -309,26 +309,33 @@ export default function ResourcesPage() {
             subtitle="Each celestial body represents a different drive or dimension of your psyche."
           />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {planetList.map((p, i) => {
               const data = interps?.planets[p.apiKey];
               return (
                 <motion.div
                   key={p.name}
-                  className="group rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 text-center hover:border-purple-500/30 transition-colors"
+                  className="group rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:border-purple-500/30 transition-colors"
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-40px" }}
                   variants={fadeUp}
                   custom={i}
                 >
-                  <span className="text-3xl block mb-2 group-hover:scale-110 transition-transform inline-block">
-                    {p.glyph}
-                  </span>
-                  <h4 className="text-sm font-bold mb-1">{p.name}</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl group-hover:scale-110 transition-transform inline-block">
+                      {p.glyph}
+                    </span>
+                    <h4 className="text-sm font-bold">{p.name}</h4>
+                  </div>
+                  <p className="text-xs text-purple-300/70 leading-relaxed mb-2">
                     {data ? data.keywords.join(" · ") : ""}
                   </p>
+                  {data?.description && (
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      {data.description}
+                    </p>
+                  )}
                 </motion.div>
               );
             })}
@@ -345,28 +352,33 @@ export default function ResourcesPage() {
             subtitle="Houses map the sky to areas of life — from identity to the unconscious."
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {houseList.map((h, i) => {
               const data = interps?.houses[String(h.num)];
               return (
                 <motion.div
                   key={h.num}
-                  className="flex items-start gap-4 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:border-purple-500/30 transition-colors"
+                  className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:border-purple-500/30 transition-colors"
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-40px" }}
                   variants={fadeUp}
                   custom={i}
                 >
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600/30 to-blue-600/30 border border-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300">
-                    {h.num}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600/30 to-blue-600/30 border border-purple-500/20 flex items-center justify-center text-sm font-bold text-purple-300">
+                      {h.num}
+                    </div>
+                    <h4 className="text-sm font-bold">{h.title}</h4>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold mb-1">{h.title}</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      {data ? data.keywords.join(" · ") : ""}
+                  <p className="text-xs text-purple-300/70 leading-relaxed mb-2">
+                    {data ? data.keywords.join(" · ") : ""}
+                  </p>
+                  {data?.description && (
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      {data.description}
                     </p>
-                  </div>
+                  )}
                 </motion.div>
               );
             })}
@@ -383,7 +395,7 @@ export default function ResourcesPage() {
             subtitle="Signs describe how energy expresses — style, not prediction."
           />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {signList.map((s, i) => {
               const ElemIcon = elementIcon[s.element];
               const data = interps?.signs[s.name];
@@ -397,19 +409,26 @@ export default function ResourcesPage() {
                   variants={fadeUp}
                   custom={i}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl">{s.glyph}</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{s.glyph}</span>
+                      <div>
+                        <h4 className="text-sm font-bold leading-tight">{s.name}</h4>
+                        <span className={`text-[10px] font-semibold uppercase tracking-widest ${elementTextColor[s.element]}`}>
+                          {s.element}
+                        </span>
+                      </div>
+                    </div>
                     <ElemIcon className={`w-4 h-4 ${elementTextColor[s.element]}`} />
                   </div>
-                  <h4 className="text-sm font-bold mb-0.5">{s.name}</h4>
-                  <span
-                    className={`text-[10px] font-semibold uppercase tracking-widest ${elementTextColor[s.element]}`}
-                  >
-                    {s.element}
-                  </span>
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                  <p className={`text-xs font-medium leading-relaxed mb-2 ${elementTextColor[s.element]} opacity-80`}>
                     {data ? data.keywords.join(" · ") : ""}
                   </p>
+                  {data?.description && (
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      {data.description}
+                    </p>
+                  )}
                 </motion.div>
               );
             })}

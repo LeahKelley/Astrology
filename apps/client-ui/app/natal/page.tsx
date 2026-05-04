@@ -19,6 +19,8 @@ import { ChartWheel } from "../components/ChartWheel";
 import { ProfileForm } from "../components/ProfileForm";
 import { ChartResults } from "../components/ChartResults";
 import type { NatalChartResponse } from "../components/ChartResults";
+import { ChartClickPanel } from "../components/ChartClickPanel";
+import type { ChartSelection } from "../components/ChartClickPanel";
 
 async function fetchCoordsForCity(
   city: string
@@ -126,6 +128,7 @@ export default function NatalChartPage() {
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState("");
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [chartSelection, setChartSelection] = useState<ChartSelection | null>(null);
 
   const allProfiles = useMemo(() => {
     const list: UnifiedProfile[] = [];
@@ -208,6 +211,8 @@ export default function NatalChartPage() {
 
       const result: NatalChartResponse = await res.json();
       setChart(result);
+      // Auto-open Sun so users see the panel is interactive
+      setChartSelection({ type: "planet", name: "Sun" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setChartError(message);
@@ -219,6 +224,7 @@ export default function NatalChartPage() {
 
   function handleSelect(id: string) {
     setSelectedId(id);
+    setChartSelection(null);
     const profile = allProfiles.find((p) => p.id === id);
     if (profile) fetchChart(profile);
   }
@@ -319,9 +325,14 @@ export default function NatalChartPage() {
     if (selectedId === id) {
       setSelectedId(null);
       setChart(defaultChart);
+      setChartSelection(null);
     }
     await loadProfiles();
   }
+
+  const clickPanelKey = chartSelection
+    ? `${chartSelection.type}-${chartSelection.name}`
+    : null;
 
   return (
     <div className="min-h-screen bg-github-dark relative">
@@ -346,20 +357,30 @@ export default function NatalChartPage() {
             </h1>
           </motion.div>
 
-          {/* Top area: Chart (left) + Form or selection info (right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Left — Chart Placeholder */}
+          {/* Top area: Chart + right column
+              Mobile order: right column (profile card) first, then chart
+              Desktop: chart left, right column right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+
+            {/* Left — Chart Wheel (below profile card on mobile) */}
             <motion.div
-              className="flex items-center justify-center"
+              className="flex items-center justify-center order-2 lg:order-1"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <ChartWheel chart={chart} size={500} />
+              <ChartWheel
+                chart={chart}
+                size={500}
+                onElementClick={(type, name) =>
+                  setChartSelection({ type, name })
+                }
+              />
             </motion.div>
 
-            {/* Right — Form area */}
+            {/* Right — Profile card + desktop click panel (above chart on mobile) */}
             <motion.div
+              className="order-1 lg:order-2 flex flex-col gap-4"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -423,10 +444,34 @@ export default function NatalChartPage() {
                   />
                 </div>
               )}
+
+              {/* Click panel — desktop only (hidden on mobile) */}
+              {chartSelection && clickPanelKey && (
+                <div className="hidden lg:block">
+                  <ChartClickPanel
+                    key={clickPanelKey}
+                    chart={chart}
+                    selection={chartSelection}
+                    onClose={() => setChartSelection(null)}
+                  />
+                </div>
+              )}
             </motion.div>
           </div>
 
-          {/* Selected profile indicator + chart results */}
+          {/* Click panel — mobile only, between chart and tables */}
+          {chartSelection && clickPanelKey && (
+            <div className="lg:hidden mb-8">
+              <ChartClickPanel
+                key={clickPanelKey + "-m"}
+                chart={chart}
+                selection={chartSelection}
+                onClose={() => setChartSelection(null)}
+              />
+            </div>
+          )}
+
+          {/* Selected profile indicator + chart results tables */}
           {selectedProfile && (
             <motion.div
               className="mb-12"

@@ -18,7 +18,6 @@ app.add_middleware(
 )
 
 BODY_MAP = {
-    "Sun": swe.SUN,
     "Moon": swe.MOON,
     "Mercury": swe.MERCURY,
     "Venus": swe.VENUS,
@@ -91,7 +90,8 @@ def calculate_daily_status(birth_jd: float, today_jd: float) -> dict:
         current_status = data["status"]
         #Randomize text based on status color
         options = DAILY_TEXT[category][current_status]
-        data["message"] = random.choice(options)
+        rng = random.Random(f"{birth_jd}:{today_jd:.0f}:{category}")
+        data["message"] = rng.choice(options)
 
     return dashboard
 

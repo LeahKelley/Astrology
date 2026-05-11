@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { ChevronDown, Moon } from "lucide-react";
-import { PlaceholderCard } from "./components/Envelope";
+import { DailyActivityCard } from "./components/DailyActivityCard";
 import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
 import { StarField } from "./components/StarField";
 
@@ -22,7 +22,7 @@ export default function Home() {
 
         <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-3 flex justify-center lg:justify-start order-2 lg:order-1">
-            <PlaceholderCard />
+            <DailyActivityCard />
           </div>
 
           <div className="lg:col-span-6 text-center space-y-8 order-1 lg:order-2">

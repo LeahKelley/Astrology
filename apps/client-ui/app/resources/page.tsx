@@ -217,6 +217,7 @@ function PlanetPlacementExplorer() {
 
   useEffect(() => {
     if (!planet || !placeType || !value) { setResult(null); return; }
+    let ignored = false;
     setResult(null);
     setLoading(true);
     const url =
@@ -225,8 +226,9 @@ function PlanetPlacementExplorer() {
         : `${INTERP_API}/interpret/combo/planet-in-sign?planet=${planet}&sign=${value}${retrograde ? "&retrograde=true" : ""}`;
     fetch(url)
       .then((r) => r.json())
-      .then((d) => { setResult(d); setLoading(false); })
-      .catch(() => { setResult(null); setLoading(false); });
+      .then((d) => { if (!ignored) { setResult(d); setLoading(false); } })
+      .catch(() => { if (!ignored) { setResult(null); setLoading(false); } });
+    return () => { ignored = true; };
   }, [planet, placeType, value, retrograde]);
 
   const surprise = () => {
@@ -360,17 +362,21 @@ function HouseSignExplorer() {
 
   useEffect(() => {
     if (!house || !sign) { setResult(null); return; }
+    let ignored = false;
     setResult(null);
     setLoading(true);
     fetch(`${INTERP_API}/interpret/combo/house-cusp?house=${house}&sign=${sign}`)
       .then((r) => r.json())
-      .then((d) => { setResult(d); setLoading(false); })
-      .catch(() => { setResult(null); setLoading(false); });
+      .then((d) => { if (!ignored) { setResult(d); setLoading(false); } })
+      .catch(() => { if (!ignored) { setResult(null); setLoading(false); } });
+    return () => { ignored = true; };
   }, [house, sign]);
 
   const surprise = () => {
-    setHouse(String(houseList[Math.floor(Math.random() * houseList.length)].num));
-    setSign(signList[Math.floor(Math.random() * signList.length)].name);
+    const rHouse = String(houseList[Math.floor(Math.random() * houseList.length)].num);
+    const rSign = signList[Math.floor(Math.random() * signList.length)].name;
+    setHouse(rHouse);
+    setSign(rSign);
   };
 
   const resultTitle = house && sign ? `House ${house} in ${sign} Meaning` : "";
@@ -442,6 +448,7 @@ function SignPlacementExplorer() {
 
   useEffect(() => {
     if (!sign || !placeType || !value) { setResult(null); return; }
+    let ignored = false;
     setResult(null);
     setLoading(true);
     const url =
@@ -450,8 +457,9 @@ function SignPlacementExplorer() {
         : `${INTERP_API}/interpret/combo/house-cusp?house=${value}&sign=${sign}`;
     fetch(url)
       .then((r) => r.json())
-      .then((d) => { setResult(d); setLoading(false); })
-      .catch(() => { setResult(null); setLoading(false); });
+      .then((d) => { if (!ignored) { setResult(d); setLoading(false); } })
+      .catch(() => { if (!ignored) { setResult(null); setLoading(false); } });
+    return () => { ignored = true; };
   }, [sign, placeType, value, retrograde]);
 
   const surprise = () => {
@@ -612,7 +620,7 @@ export default function ResourcesPage() {
   const [p2Key, setP2Key] = useState("");
 
   const validP2 = useMemo(() => {
-    if (!p1Key) return planetList;
+    if (!p1Key) return [];
     const minSep = aspKey ? (ASPECT_MIN_SEP[aspKey] ?? 0) : 0;
     return planetList.filter(
       (p) => p.apiKey !== p1Key && maxAngularSep(p1Key, p.apiKey) >= minSep
@@ -654,12 +662,14 @@ export default function ResourcesPage() {
   const [comboLoading, setComboLoading] = useState(false);
 
   useEffect(() => {
-    if (!p1Key || !aspKey || !p2Key) { setComboInterp(null); return; }
+    if (!p1Key || !aspKey || !p2Key) { setComboInterp(null); setComboLoading(false); return; }
+    let ignored = false;
     setComboLoading(true);
     fetch(`${INTERP_API}/interpret/combo/aspect?planet1=${p1Key}&aspect=${aspKey}&planet2=${p2Key}`)
       .then((r) => r.json())
-      .then((data) => { setComboInterp(data); setComboLoading(false); })
-      .catch(() => { setComboInterp(null); setComboLoading(false); });
+      .then((data) => { if (!ignored) { setComboInterp(data); setComboLoading(false); } })
+      .catch(() => { if (!ignored) { setComboInterp(null); setComboLoading(false); } });
+    return () => { ignored = true; };
   }, [p1Key, aspKey, p2Key]);
 
   useEffect(() => {

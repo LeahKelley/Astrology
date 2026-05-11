@@ -57,11 +57,12 @@ def calculate_daily_status(birth_jd: float, today_jd: float) -> dict:
     dashboard = {
         "Work": {"planet": "Mars", "status": "yellow"},
         "Social": {"planet": "Venus", "status": "yellow"},
-        "Focus": {"planet": "Mercury", "status": "yellow"}
+        "Focus": {"planet": "Mercury", "status": "yellow"},
+        "Rest": {"planet": "Moon", "status": "yellow"}
     }
 
     for current in today_planets:
-        if current["name"] not in ["Mars", "Venus", "Mercury"]:
+        if current["name"] not in ["Mars", "Venus", "Mercury", "Moon"]:
             continue
             
         for natal in birth_planets:

@@ -130,32 +130,6 @@ const elementIcon: Record<string, React.ComponentType<{ className?: string }>> =
   water: Droplets,
 };
 
-const placementExamples = [
-  {
-    label: "Mars in Taurus in the 4th",
-    planetKey: "Mars",
-    signKey: "Taurus",
-    houseKey: "4",
-    synthesis:
-      "This placement combines Mars's assertive drive with Taurus's patient endurance, channeling it into the sphere of home and private life. You pursue domestic security with quiet, immovable determination — building slowly and building to last.",
-  },
-  {
-    label: "Venus in Gemini in the 7th",
-    planetKey: "Venus",
-    signKey: "Gemini",
-    houseKey: "7",
-    synthesis:
-      "Venus's desire for harmony meets Gemini's restless curiosity in the house of partnership. You are drawn to relationships that keep you mentally engaged — witty, conversational, and pleasantly unpredictable.",
-  },
-  {
-    label: "Moon in Scorpio in the 12th",
-    planetKey: "Moon",
-    signKey: "Scorpio",
-    houseKey: "12",
-    synthesis:
-      "The Moon's emotional sensitivity deepens through Scorpio's intensity and retreats into the chart's most hidden sector. Your inner life runs extraordinarily deep, largely invisible to others until moments of solitude or crisis bring it fully to the surface.",
-  },
-];
 
 function SectionHeading({
   icon: Icon,
@@ -436,73 +410,7 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      {/* 5 — Placements Explained */}
-      <section className="relative py-20 px-6 border-t border-white/5">
-        <div className="max-w-4xl mx-auto">
-          <SectionHeading
-            icon={Waypoints}
-            title="Placements Explained"
-            subtitle="Combining planet, sign, and house into plain-language meaning."
-          />
-
-          <div className="space-y-6">
-            {placementExamples.map((p, i) => {
-              const planetData = interps?.planets[p.planetKey];
-              const signData = interps?.signs[p.signKey];
-              const houseData = interps?.houses[p.houseKey];
-              return (
-                <motion.div
-                  key={p.label}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-40px" }}
-                  variants={fadeUp}
-                  custom={i}
-                >
-                  <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-                    <h4 className="font-display font-bold text-lg">{p.label}</h4>
-                  </div>
-                  <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400 block mb-1">
-                        Planet (What)
-                      </span>
-                      <span className="text-sm font-semibold">{p.planetKey}</span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {planetData ? firstSentence(planetData.in_chart) : ""}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 block mb-1">
-                        Sign (How)
-                      </span>
-                      <span className="text-sm font-semibold">{p.signKey}</span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {signData ? firstSentence(signData.in_chart) : ""}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 block mb-1">
-                        House (Where)
-                      </span>
-                      <span className="text-sm font-semibold">{p.houseKey}th House</span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {houseData ? firstSentence(houseData.in_chart) : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-white/5 bg-white/[0.02]">
-                    <p className="text-sm text-gray-400 leading-relaxed">{p.synthesis}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 6 — Aspects */}
+      {/* 5 — Aspects */}
       <section className="relative py-20 px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <SectionHeading

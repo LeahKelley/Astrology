@@ -8,6 +8,7 @@ import {
   Compass,
   LogOut,
   Menu,
+  Settings,
   Sparkles,
   User,
   X,
@@ -81,9 +82,9 @@ export const Navbar = () => {
           {user ? (
             <>
               <Link
-                href="/profile"
+                href="/settings"
                 className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-500 transition-colors"
-                title={user.email ?? "Profile"}
+                title={user.email ?? "Settings"}
               >
                 <User className="w-4 h-4 text-white" />
               </Link>
@@ -138,11 +139,11 @@ export const Navbar = () => {
           {user ? (
             <>
               <Link
-                href="/profile"
+                href="/settings"
                 onClick={() => setMenuOpen(false)}
                 className={navLinkClass}
               >
-                <User className="w-4 h-4" /> Profile
+                <Settings className="w-4 h-4" /> Settings
               </Link>
               <button onClick={handleSignOut} className={navLinkClass}>
                 <LogOut className="w-4 h-4" /> Sign out

@@ -28,7 +28,7 @@ export default function SignInPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/profile");
+      router.push("/settings");
       router.refresh();
     }
   }

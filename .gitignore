@@ -25,4 +25,6 @@ build/
 
 # Swiss Ephemeris data files (keep local)
 services/ephemeris-api/ephe/*
-!services/ephemeris-api/ephe/.gitkeep
+!services/ephemeris-api/ephe/.gitkeep# Presentation artifacts
+MyAstrology_Presentation.pptx
+build_pptx.py

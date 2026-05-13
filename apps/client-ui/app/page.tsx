@@ -2,9 +2,9 @@
 
 import { motion } from "motion/react";
 import Link from "next/link";
-import { ChevronDown, Moon } from "lucide-react";
+import { BookOpen, Compass } from "lucide-react";
 import { DailyActivityCard } from "./components/DailyActivityCard";
-import { NatalChartPlaceholder } from "./components/NatalChartPlaceholder";
+import { PlacementsCard } from "./components/PlacementsCard";
 import { StarField } from "./components/StarField";
 
 export default function Home() {
@@ -21,10 +21,12 @@ export default function Home() {
         <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] bg-indigo-900/5 blur-[100px] rounded-full" />
 
         <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left — Daily reading */}
           <div className="lg:col-span-3 flex justify-center lg:justify-start order-2 lg:order-1">
             <DailyActivityCard />
           </div>
 
+          {/* Center — Hero */}
           <div className="lg:col-span-6 text-center space-y-8 order-1 lg:order-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -57,69 +59,73 @@ export default function Home() {
                 Generate your chart
               </Link>
             </motion.div>
-
-            <div className="flex flex-col items-center gap-4 pt-8">
-              <motion.div
-                className="w-20 h-20 rounded-full border border-github-border p-1 bg-gradient-to-b from-purple-500/20 to-transparent flex items-center justify-center relative"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <div className="absolute inset-0 bg-purple-500/10 blur-xl rounded-full" />
-                <div className="w-full h-full rounded-full bg-github-dark flex items-center justify-center">
-                  <Moon className="w-10 h-10 text-purple-400" />
-                </div>
-              </motion.div>
-              <p className="text-xs text-gray-500 max-w-xs font-medium uppercase tracking-widest">
-                Your cosmic blueprint awaits
-              </p>
-            </div>
           </div>
 
+          {/* Right — Big Three placements */}
           <div className="lg:col-span-3 flex justify-center lg:justify-end order-3">
-            <NatalChartPlaceholder />
+            <PlacementsCard />
           </div>
         </div>
-
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <span className="text-[10px] uppercase tracking-[0.3em] font-semibold">
-            More on scroll
-          </span>
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
       </main>
 
+      {/* CTA Section */}
       <section className="bg-github-dark border-t border-github-border py-20 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
-          <div className="space-y-4">
-            <h3 className="text-lg font-display font-bold">Natal Chart</h3>
-            <p className="text-sm text-gray-400">
-              A natal chart is a snapshot of the sky at the exact moment of your
-              birth. It maps the positions of the planets across the twelve
-              zodiac signs and houses.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-lg font-display font-bold">Planetary Positions</h3>
-            <p className="text-sm text-gray-400">
-              See where the Sun, Moon, and every planet were placed at your
-              birth — including sign, degree, house, and whether each body was
-              in retrograde.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-lg font-display font-bold">
-              Houses &amp; Aspects
-            </h3>
-            <p className="text-sm text-gray-400">
-              Explore your twelve house cusps and the angular relationships
-              between planets — conjunctions, oppositions, trines, squares, and
-              sextiles — calculated with Swiss Ephemeris precision.
-            </p>
-          </div>
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Link
+              href="/natal"
+              className="group flex flex-col h-full rounded-2xl border border-white/10 bg-white/[0.03] hover:border-purple-500/40 hover:bg-purple-500/5 p-8 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5 group-hover:bg-purple-600/30 transition-colors">
+                <Compass className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-display font-bold mb-2 group-hover:text-purple-300 transition-colors">
+                Your Natal Chart
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed flex-1">
+                Enter your birth date, time, and city to generate a precise
+                natal chart — every planet, house cusp, and aspect calculated
+                with Swiss Ephemeris accuracy.
+              </p>
+              <span className="mt-5 text-xs font-semibold text-purple-400 group-hover:text-purple-300 transition-colors flex items-center gap-1.5">
+                Generate your chart
+                <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+              </span>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Link
+              href="/resources"
+              className="group flex flex-col h-full rounded-2xl border border-white/10 bg-white/[0.03] hover:border-blue-500/40 hover:bg-blue-500/5 p-8 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mb-5 group-hover:bg-blue-600/30 transition-colors">
+                <BookOpen className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-display font-bold mb-2 group-hover:text-blue-300 transition-colors">
+                Learning Center
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed flex-1">
+                Explore planets, signs, houses, and aspects through interactive
+                explorers — look up any placement or combination and read the
+                interpretation specific to your chart.
+              </p>
+              <span className="mt-5 text-xs font-semibold text-blue-400 group-hover:text-blue-300 transition-colors flex items-center gap-1.5">
+                Explore the guides
+                <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+              </span>
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>

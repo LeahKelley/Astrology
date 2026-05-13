@@ -1,169 +1,185 @@
-# Placeholder Astrology
+# MyAstrology
 
-Natal chart engine and interactive chart wheel. The frontend collects user inputs, calls the Ephemeris API, and renders an astrology chart.
+Full-stack natal chart application. Users enter their birth details to generate a precise natal chart — planetary positions, house placements, and aspects — powered by Swiss Ephemeris. The app also provides a daily cosmic forecast, interactive interpretation explorers, and saved profiles for friends and family.
 
 ## Licensing Notice
 
-If you fork, deploy, or modify this project, you must comply with the AGPL
-and all third-party licenses.
+If you fork, deploy, or modify this project, you must comply with the AGPL and all third-party licenses.
+
+## Architecture
+
+Four services run concurrently. The Next.js frontend calls each over localhost during development.
+
+```
+Astrology/
+├── apps/
+│   └── client-ui/               # Next.js 16 frontend (port 3000)
+└── services/
+    ├── ephemeris-api/            # Natal chart computation — Python/FastAPI (port 8000)
+    ├── geolocation/              # City geocoding & timezone lookup — Python/FastAPI (port 8001)
+    ├── interpretations/          # Astrological interpretation text — Go/net/http (port 8002)
+    └── user-profile/             # Daily activity forecast — Python/FastAPI (port 8003)
+```
 
 ## Tech Stack
 
+### Frontend
+
 | Layer | Tech |
 |-------|------|
-| Frontend framework | Next.js 16 (App Router) |
-| Styling | Tailwind CSS 4, shadcn/ui |
+| Framework | Next.js 16 (App Router), React 19 |
+| Styling | Tailwind CSS 4 |
 | Animations | Motion (Framer Motion) |
-| Forms | React Hook Form |
-| Date picker | React DayPicker |
-| Timezone picker | React Timezone Select |
-| Data fetching | SWR |
-| Chart rendering | AstroChart (SVG) |
-| AI layer | Vercel AI SDK |
+| Forms | React Hook Form, Zod |
 | Auth & DB | Supabase |
-| Backend API | FastAPI + pyswisseph |
+| Icons | Lucide React |
+
+### Backend Services
+
+| Service | Language | Key Libraries |
+|---------|----------|---------------|
+| Ephemeris API | Python | FastAPI, pyswisseph, pydantic |
+| Geolocation | Python | FastAPI, geopy, timezonefinder |
+| Interpretations | Go | net/http (stdlib) |
+| User Profile | Python | FastAPI, pyswisseph |
 
 ## Prerequisites
 
 - **Node.js** >= 18
 - **Python** >= 3.10
+- **Go** >= 1.21
 - **pip** (comes with Python)
-
-## Project Structure
-
-```
-Astrology/
-├── apps/
-│   └── client-ui/          # Next.js frontend
-│       ├── app/             # App Router pages & components
-│       ├── package.json
-│       └── ...
-└── services/
-    ├── ephemeris-api/       # Python backend
-    │   ├── src/app/
-    │   │   ├── main.py      # FastAPI entry point
-    │   │   ├── api/         # Route handlers
-    │   │   ├── core/        # Swiss Ephemeris adapter, models, logging
-    │   │   └── services/    # Natal chart computation logic
-    │   └── requirements.txt
-    └── geolocation/         # Geolocation & timezone service
-        ├── geolocation.py
-        └── requirements.txt
-```
 
 ## Getting Started
 
-### 1. Backend (Ephemeris API)
+Start all four services in separate terminal tabs, then start the frontend.
+
+### 1. Ephemeris API (port 8000)
 
 ```bash
-cd Astrology/services/ephemeris-api
-
-# Create and activate a virtual environment
+cd services/ephemeris-api
 python -m venv venv
-
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
-
-# Windows (Command Prompt)
-venv\Scripts\activate.bat
-
-# macOS / Linux
-source venv/bin/activate
-
-# Install dependencies
+source venv/bin/activate        # macOS/Linux
+# venv\Scripts\activate.bat     # Windows
 pip install -r requirements.txt
-
-# Start the server
 uvicorn src.app.main:app --reload --port 8000
 ```
 
-The API will be available at **http://127.0.0.1:8000**. Interactive docs at **http://127.0.0.1:8000/docs**.
+Interactive docs: **http://127.0.0.1:8000/docs**
 
-### 2. Geolocation Service
-
-Open a **second terminal**:
+### 2. Geolocation Service (port 8001)
 
 ```bash
-cd Astrology/services/geolocation
-
-# Create and activate a virtual environment
+cd services/geolocation
 python -m venv venv
-
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
-
-# macOS / Linux
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Start the server
 uvicorn geolocation:app --reload --port 8001
 ```
 
-The geolocation API will be available at **http://127.0.0.1:8001**.
-
-### 3. Frontend (Next.js Client)
-
-Open a **third terminal**:
+### 3. Interpretations Service (port 8002)
 
 ```bash
-cd Astrology/apps/client-ui
+cd services/interpretations
+go run .
+```
 
-# Install dependencies
+### 4. User Profile Service (port 8003)
+
+```bash
+cd services/user-profile
+uvicorn daily_activity:app --reload --port 8003
+```
+
+> The user-profile service shares the same Python environment as the ephemeris-api. If you've already activated that venv and installed its dependencies, `pyswisseph` will already be present.
+
+### 5. Frontend (port 3000)
+
+```bash
+cd apps/client-ui
 npm install
-
-# Start the dev server
 npm run dev
 ```
 
 The app will be available at **http://localhost:3000**.
 
-## API Endpoints
+## API Reference
 
-### Ephemeris API (port 8000)
+### Ephemeris API — port 8000
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/health` | Health check |
 | POST | `/api/v1/chart/natal` | Compute a natal chart |
 
-### Geolocation Service (port 8001)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/location/geolocation?address=...` | Get coordinates for a city |
-| GET | `/location/geolocation/timezone?lat=...&lng=...` | Get timezone for coordinates |
-
-### Example: Natal Chart Request
-
+**Natal chart request body:**
 ```json
 {
   "date": "1990-06-15",
   "time": "14:30",
   "timezone": "America/New_York",
   "latitude": 40.7128,
-  "longitude": -74.006,
-  "city": "New York",
-  "house_system": "placidus"
+  "longitude": -74.0060
 }
 ```
 
-## Available Scripts
+### Geolocation Service — port 8001
 
-### Frontend (`apps/client-ui`)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/location/geolocation?address=...` | Geocode a city name to coordinates |
+| GET | `/location/geolocation/timezone?lat=...&lng=...` | Get IANA timezone for coordinates |
+
+### Interpretations Service — port 8002
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/interpret/planets` | All planet interpretations |
+| GET | `/interpret/signs` | All sign interpretations |
+| GET | `/interpret/houses` | All house interpretations |
+| GET | `/interpret/aspects` | All aspect interpretations |
+| GET | `/interpret/planet/:name` | Single planet |
+| GET | `/interpret/sign/:name` | Single sign |
+| GET | `/interpret/house/:num` | Single house |
+| GET | `/interpret/aspect/:name` | Single aspect |
+| GET | `/interpret/combo/planet-in-sign?planet=...&sign=...&retrograde=...` | Planet in sign combo |
+| GET | `/interpret/combo/planet-in-house?planet=...&house=...` | Planet in house combo |
+| GET | `/interpret/combo/house-cusp?house=...&sign=...` | House cusp combo |
+| GET | `/interpret/combo/aspect?planet1=...&aspect=...&planet2=...` | Aspect combo |
+
+### User Profile Service — port 8003
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/user-profile/daily-activity?birth_jd=...` | Daily Work/Social/Focus/Rest forecast |
+
+`birth_jd` is the Julian Day number of the user's birth date and time.
+
+## Database (Supabase)
+
+| Table | Purpose |
+|-------|---------|
+| `profiles` | The signed-in user's own birth profile |
+| `stored_profiles` | Additional saved profiles (friends, family) |
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home — daily forecast card, Big Three placements, navigation tiles |
+| `/natal` | Natal chart generator — compute and view charts for any saved profile |
+| `/resources` | Learning center — interactive planet, house, sign, and aspect explorers |
+| `/settings` | Profile management — create, edit, search, and delete profiles |
+| `/sign-in` | Email/password sign in |
+| `/sign-up` | New account registration |
+| `/onboarding` | First-run profile setup |
+
+## Frontend Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server |
+| `npm run dev` | Start dev server with hot reload |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build |
 | `npm run lint` | Run ESLint |
-
-### Backend (`services/ephemeris-api`)
-
-| Command | Description |
-|---------|-------------|
-| `uvicorn src.app.main:app --reload --port 8000` | Start dev server with hot reload |
-| `uvicorn src.app.main:app --port 8000` | Start without hot reload |

@@ -1,127 +1,79 @@
-# Placeholder Astrology
+# MyAstrology — Client UI
 
-Natal chart engine and interactive chart wheel. The frontend collects user inputs, calls the Ephemeris API, and renders an astrology chart.
+Next.js 16 frontend for the MyAstrology app. Calls four backend services over localhost for chart computation, geocoding, interpretation text, and daily forecasts.
 
 ## Tech Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend framework | Next.js 16 (App Router) |
-| Styling | Tailwind CSS 4, shadcn/ui |
+| Framework | Next.js 16 (App Router), React 19 |
+| Styling | Tailwind CSS 4 |
 | Animations | Motion (Framer Motion) |
-| Forms | React Hook Form |
-| Date picker | React DayPicker |
-| Timezone picker | React Timezone Select |
-| Data fetching | SWR |
-| Chart rendering | AstroChart (SVG) |
-| AI layer | Vercel AI SDK |
-| Auth & DB | Firebase |
-| Backend API | FastAPI + pyswisseph |
+| Forms | React Hook Form + Zod |
+| Auth & DB | Supabase (`@supabase/ssr`, `@supabase/supabase-js`) |
+| Icons | Lucide React |
 
 ## Prerequisites
 
 - **Node.js** >= 18
-- **Python** >= 3.10
-- **pip** (comes with Python)
-
-## Project Structure
-
-```
-Astrology/
-├── apps/
-│   └── client-ui/          # Next.js frontend
-│       ├── app/             # App Router pages & components
-│       ├── package.json
-│       └── ...
-└── services/
-    └── ephemeris-api/       # Python backend
-        ├── src/app/
-        │   ├── main.py      # FastAPI entry point
-        │   ├── api/         # Route handlers
-        │   ├── core/        # Swiss Ephemeris adapter, models, logging
-        │   └── services/    # Natal chart computation logic
-        └── requirements.txt
-```
+- All four backend services running (see root README)
+- A `.env.local` file with your Supabase credentials
 
 ## Getting Started
 
-### 1. Backend (Ephemeris API)
-
 ```bash
-cd Astrology/services/ephemeris-api
-
-# Create and activate a virtual environment
-python -m venv venv
-
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
-
-# Windows (Command Prompt)
-venv\Scripts\activate.bat
-
-# macOS / Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start the server
-uvicorn src.app.main:app --reload --port 8000
-```
-
-The API will be available at **http://127.0.0.1:8000**. Interactive docs at **http://127.0.0.1:8000/docs**.
-
-### 2. Frontend (Next.js Client)
-
-Open a **second terminal**:
-
-```bash
-cd Astrology/apps/client-ui
-
-# Install dependencies
 npm install
-
-# Start the dev server
 npm run dev
 ```
 
-The app will be available at **http://localhost:3000**.
+App runs at **http://localhost:3000**.
 
-## API Endpoints
+## Environment Variables
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/health` | Health check |
-| POST | `/api/v1/chart/natal` | Compute a natal chart |
+Create `apps/client-ui/.env.local`:
 
-### Example: Natal Chart Request
-
-```json
-{
-  "date": "1990-06-15",
-  "time": "14:30",
-  "timezone": "America/New_York",
-  "latitude": 40.7128,
-  "longitude": -74.006,
-  "city": "New York",
-  "house_system": "placidus"
-}
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## Available Scripts
+## Pages
 
-### Frontend (`apps/client-ui`)
+| Route | Description |
+|-------|-------------|
+| `/` | Home — daily forecast, Big Three placements, navigation tiles |
+| `/natal` | Natal chart generator and viewer |
+| `/resources` | Interactive learning center |
+| `/settings` | Profile management |
+| `/sign-in` | Sign in |
+| `/sign-up` | Register |
+| `/onboarding` | First-run profile setup |
+
+## Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `DailyActivityCard` | Fetches and displays daily Work/Social/Focus/Rest forecast from port 8003. Supports switching between saved profiles. |
+| `PlacementsCard` | Shows Sun, Moon, and Rising sign for the user's own profile. Calls ports 8001 and 8000. Falls back gracefully if services are offline. |
+| `ChartResults` | Renders the full natal chart output — planet positions, house placements, and aspects. |
+| `ProfileForm` | Shared form used across onboarding, natal chart, and settings pages for entering birth details. |
+| `Navbar` | Fixed top nav with auth state awareness and mobile hamburger menu. |
+| `StarField` | Animated star background used across pages. |
+
+## Backend Service Ports
+
+| Port | Service |
+|------|---------|
+| 8000 | Ephemeris API — natal chart computation |
+| 8001 | Geolocation — city geocoding and timezone lookup |
+| 8002 | Interpretations — astrological text for all placement combos |
+| 8003 | User Profile — daily activity forecast |
+
+## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server |
+| `npm run dev` | Start dev server with hot reload |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build |
 | `npm run lint` | Run ESLint |
-
-### Backend (`services/ephemeris-api`)
-
-| Command | Description |
-|---------|-------------|
-| `uvicorn src.app.main:app --reload --port 8000` | Start dev server with hot reload |
-| `uvicorn src.app.main:app --port 8000` | Start without hot reload |

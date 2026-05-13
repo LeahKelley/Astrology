@@ -1,5 +1,4 @@
 import os
-import swisseph as swe
 from datetime import datetime
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

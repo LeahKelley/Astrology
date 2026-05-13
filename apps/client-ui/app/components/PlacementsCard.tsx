@@ -29,7 +29,8 @@ async function fetchBigThree(profile: Profile): Promise<Placement[]> {
     `http://127.0.0.1:8001/location/geolocation?address=${encodeURIComponent(profile.city_of_birth)}`
   );
   const geoData = await geoRes.json();
-  const loc = Array.isArray(geoData) ? geoData[0] : geoData;
+  const loc = geoData["Latitude and Longitude"]?.[0];
+  if (!loc) throw new Error("Geocoding failed");
   const { latitude, longitude } = loc;
 
   const tzRes = await fetch(

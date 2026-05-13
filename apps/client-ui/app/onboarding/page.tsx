@@ -13,6 +13,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function check() {
@@ -43,6 +44,7 @@ export default function OnboardingPage() {
 
   async function handleSubmit(data: ProfileFormValues) {
     setLoading(true);
+    setError("");
     try {
       const {
         data: { user },
@@ -65,6 +67,8 @@ export default function OnboardingPage() {
 
       router.push("/natal");
       router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -97,6 +101,11 @@ export default function OnboardingPage() {
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+          {error && (
+            <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
           <ProfileForm
             onSubmit={handleSubmit}
             submitLabel="Get Started"

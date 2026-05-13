@@ -33,7 +33,7 @@ const SIGNS = [
   "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
 ];
 
-const INTERP_BASE = "http://localhost:8002";
+import { INTERP_API as INTERP_BASE } from "@/lib/api";
 
 function formatDegree(value: number): string {
   const deg = Math.floor(value);

@@ -32,12 +32,11 @@ ASPECT_TARGETS = {
     "sextile": (60.0, 4.0),
 }
 
-ephe_path = Path(__file__).resolve().parents[3] / "ephe"
+ephe_path = Path(__file__).resolve().parents[1] / "ephemeris-api" / "ephe"
 swe.set_ephe_path(str(ephe_path))
 
 def compute_bodies(jd: float) -> list[dict]:
-    #Takes in a Julian Day and returns planetary positions
-    flags = swe.FLG_MOSEPH | swe.FLG_SPEED #Change swe.FLG_MOSEPH to swe.FLG_SWIEPH later
+    flags = swe.FLG_SWIEPH | swe.FLG_SPEED #Change swe.FLG_MOSEPH to swe.FLG_SWIEPH later
     bodies = []
     for name, body_id in BODY_MAP.items():
         xx, retflags = swe.calc_ut(jd, body_id, flags)

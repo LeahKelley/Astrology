@@ -6,7 +6,9 @@ Runs on **port 8003**.
 
 ## Setup
 
-This service uses `pyswisseph`. If you have the ephemeris-api virtual environment already set up, activate it and run from there. Otherwise:
+This service uses `pyswisseph` with the Swiss Ephemeris data files located in `services/ephemeris-api/ephe/`. The ephemeris-api service must be present (the data files don't need to be running, just on disk).
+
+If you have the ephemeris-api virtual environment already set up, activate it and run from there. Otherwise:
 
 ```bash
 pip install fastapi uvicorn pyswisseph

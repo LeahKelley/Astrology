@@ -21,12 +21,13 @@ import { ChartResults } from "../components/ChartResults";
 import type { NatalChartResponse } from "../components/ChartResults";
 import { ChartClickPanel } from "../components/ChartClickPanel";
 import type { ChartSelection } from "../components/ChartClickPanel";
+import { EPHEMERIS_API, GEO_API } from "@/lib/api";
 
 async function fetchCoordsForCity(
   city: string
 ): Promise<{ latitude: number; longitude: number }> {
   const res = await fetch(
-    `http://127.0.0.1:8001/location/geolocation?address=${encodeURIComponent(city)}`
+    `${GEO_API}/location/geolocation?address=${encodeURIComponent(city)}`
   );
 
   if (!res.ok) {
@@ -49,7 +50,7 @@ async function fetchTimezoneForCoords(
   longitude: number
 ): Promise<string> {
   const res = await fetch(
-    `http://127.0.0.1:8001/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
+    `${GEO_API}/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
   );
 
   if (!res.ok) {
@@ -198,7 +199,7 @@ export default function NatalChartPage() {
         house_system: "placidus",
       };
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/chart/natal", {
+      const res = await fetch(`${EPHEMERIS_API}/api/v1/chart/natal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

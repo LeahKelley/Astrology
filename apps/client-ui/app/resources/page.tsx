@@ -27,7 +27,7 @@ import {
   Target,
 } from "lucide-react";
 
-const INTERP_API = "http://localhost:8002";
+import { INTERP_API } from "@/lib/api";
 
 type InterpData = {
   name: string;

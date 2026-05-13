@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { EPHEMERIS_API, GEO_API } from "@/lib/api";
 import type { Profile } from "@/utils/supabase/types";
 
 const SIGNS = [
@@ -26,7 +27,7 @@ function longitudeToSign(lon: number): string {
 
 async function fetchBigThree(profile: Profile): Promise<Placement[]> {
   const geoRes = await fetch(
-    `http://127.0.0.1:8001/location/geolocation?address=${encodeURIComponent(profile.city_of_birth)}`
+    `${GEO_API}/location/geolocation?address=${encodeURIComponent(profile.city_of_birth)}`
   );
   const geoData = await geoRes.json();
   const loc = geoData["Latitude and Longitude"]?.[0];
@@ -34,12 +35,12 @@ async function fetchBigThree(profile: Profile): Promise<Placement[]> {
   const { latitude, longitude } = loc;
 
   const tzRes = await fetch(
-    `http://127.0.0.1:8001/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
+    `${GEO_API}/location/geolocation/timezone?lat=${latitude}&lng=${longitude}`
   );
   const tzData = await tzRes.json();
   const timezone = tzData.timezone ?? profile.timezone ?? "UTC";
 
-  const chartRes = await fetch("http://127.0.0.1:8000/api/v1/chart/natal", {
+  const chartRes = await fetch(`${EPHEMERIS_API}/api/v1/chart/natal`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

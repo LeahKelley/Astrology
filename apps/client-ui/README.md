@@ -30,12 +30,22 @@ App runs at **http://localhost:3000**.
 
 ## Environment Variables
 
-Create `apps/client-ui/.env.local`:
+Copy `.env.local.example` to `.env.local` and fill in your values. The file is gitignored and never committed.
 
+```bash
+cp .env.local.example .env.local
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Your Supabase anon key |
+| `NEXT_PUBLIC_EPHEMERIS_API` | No | Ephemeris service base URL (default: `http://127.0.0.1:8000`) |
+| `NEXT_PUBLIC_GEO_API` | No | Geolocation service base URL (default: `http://127.0.0.1:8001`) |
+| `NEXT_PUBLIC_INTERP_API` | No | Interpretations service base URL (default: `http://127.0.0.1:8002`) |
+| `NEXT_PUBLIC_PROFILE_API` | No | User profile service base URL (default: `http://127.0.0.1:8003`) |
+
+The four service URL variables are optional — if omitted, the app falls back to the default localhost ports. Override them if your services run on different ports or remote hosts.
 
 ## Pages
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import type { NatalChartResponse } from "./ChartResults";
 
-const INTERP_BASE = "http://localhost:8002";
+import { INTERP_API as INTERP_BASE } from "@/lib/api";
 
 const SIGNS = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",

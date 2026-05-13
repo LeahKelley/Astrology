@@ -97,11 +97,14 @@ uvicorn daily_activity:app --reload --port 8003
 
 ```bash
 cd apps/client-ui
+cp .env.local.example .env.local   # then fill in your Supabase credentials
 npm install
 npm run dev
 ```
 
 The app will be available at **http://localhost:3000**.
+
+> The four `NEXT_PUBLIC_*_API` variables in `.env.local` are optional — they default to the localhost ports above. Only set them if your services run elsewhere.
 
 ## API Reference
 

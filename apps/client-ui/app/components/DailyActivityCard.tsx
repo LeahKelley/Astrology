@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/utils/supabase/client";
 import type { Profile, StoredProfile } from "@/utils/supabase/types";
 
-const DAILY_API = "http://127.0.0.1:8003";
+import { PROFILE_API as DAILY_API } from "@/lib/api";
 
 type DailyStatus = {
   planet: string;

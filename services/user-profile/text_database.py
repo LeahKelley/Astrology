@@ -1,23 +1,32 @@
+# used to randomly pick one of several possible messages so the UI doesn't show the same line every time
 import random
 
+# the full content library for the daily activity card
+# organized by life category (Work, Social, Focus, Rest), then by energy level (green/yellow/red)
+# green = favorable conditions, yellow = neutral, red = challenging
 DAILY_TEXT = {
+    # messages shown when the Work category is calculated from today's planetary positions
     "Work": {
+        # planet alignments are supportive of productivity and ambition
         "green": [
             "High energy today. Tackle your hardest tasks first.",
             "Great momentum. Perfect day to launch or pitch.",
             "Frictionless productivity. You're in the zone."
         ],
+        # planetary energy is neither helping nor hurting
         "yellow": [
             "Steady pace. Stick to routine tasks today.",
             "Business as usual. No need to rush.",
             "Maintain your current momentum; avoid starting new massive projects."
         ],
+        # planetary alignments suggest friction or low drive
         "red": [
             "High risk of burnout. Do the minimum and log off.",
             "Expect delays or friction. Don't force outcomes today.",
             "Patience required. Not a good day for high-stakes decisions."
         ]
     },
+    # messages for social energy based on Venus and Moon transits
     "Social": {
         "green": [
             "Your charm is high. Great evening for a date or networking.",
@@ -35,6 +44,7 @@ DAILY_TEXT = {
             "Potential for friction. Not the best day to resolve conflicts."
         ]
     },
+    # messages for mental focus, heavily influenced by Mercury
     "Focus": {
         "green": [
             "Mental clarity is peaking. Perfect for deep, uninterrupted work.",
@@ -52,6 +62,7 @@ DAILY_TEXT = {
             "Distractions are high. Be gentle with your attention span."
         ]
     },
+    # messages for rest and recovery, tied to Moon phase and Neptune
     "Rest": {
         "green": [
             "Deep recovery is possible tonight. Prioritize sleep.",
@@ -71,6 +82,9 @@ DAILY_TEXT = {
     }
 }
 
+# picks a random message from the right category and energy level bucket
 def get_category_text(category, status):
+    # grab the list of possible messages for this category+status combo
     options = DAILY_TEXT[category][status]
+    # return one at random so the user sees variety day to day
     return random.choice(options)

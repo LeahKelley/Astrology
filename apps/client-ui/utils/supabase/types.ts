@@ -29,7 +29,7 @@ export type StoredProfile = {
 // uses a Date object for dateOfBirth so the date picker component can work with it directly
 export type ProfileFormValues = {
   firstName: string;
-  dateOfBirth: Date | undefined; // undefined until the user picks a date
+  dateOfBirth: Date;              // a Date object so the date picker component can work with it directly
   timeOfBirth: string;           // kept as a string for the time input field
   city: string;
   timezone: string;              // populated automatically after the city is geolocated

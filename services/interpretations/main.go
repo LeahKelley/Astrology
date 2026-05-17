@@ -1,3 +1,6 @@
+// main.go is the entry point and HTTP layer for the interpretations service.
+// It wires all routes to handler functions and delegates interpretation logic
+// to combos.go. The service uses only the Go standard library, no frameworks.
 package main
 
 import (
@@ -9,10 +12,10 @@ import (
 	"strings"
 )
 
-
 func main() {
 	mux := http.NewServeMux()
 
+	// Individual lookup routes, one per entity type.
 	mux.HandleFunc("/health", handleHealth)
 	mux.HandleFunc("/interpret/planets", handleAllPlanets)
 	mux.HandleFunc("/interpret/signs", handleAllSigns)
@@ -23,6 +26,7 @@ func main() {
 	mux.HandleFunc("/interpret/house/", handleHouse)
 	mux.HandleFunc("/interpret/aspect/", handleAspect)
 
+	// Combo routes return a composed interpretation for a specific placement pair.
 	mux.HandleFunc("/interpret/combo/planet-in-sign", handlePlanetInSign)
 	mux.HandleFunc("/interpret/combo/planet-in-house", handlePlanetInHouse)
 	mux.HandleFunc("/interpret/combo/house-cusp", handleHouseCusp)
@@ -32,6 +36,8 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8002", corsMiddleware(mux)))
 }
 
+// corsMiddleware adds permissive CORS headers so the Next.js frontend can call
+// this service from localhost:3000 without running into browser CORS blocks.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -45,12 +51,14 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// writeJSON sets Content-Type and encodes v as JSON with the given status code.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
 }
 
+// writeError is a wrapper that sends a JSON error body.
 func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
@@ -59,6 +67,9 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "interpretations"})
 }
 
+// handlePlanet looks up a single planet by name from the URL path segment.
+// It normalizes the name so callers can pass "sun", "Sun", or "SUN" interchangeably,
+// and handles the four chart angles (ASC, DSC, MC, IC) as special cases.
 func handlePlanet(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/interpret/planet/")
 	name = strings.TrimSpace(name)
@@ -66,7 +77,7 @@ func handlePlanet(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "planet name required")
 		return
 	}
-	// Normalize: capitalize first letter, lowercase rest (e.g. "sun" → "Sun")
+	// Normalize: capitalize first letter, lowercase rest (e.g. "sun" -> "Sun")
 	name = strings.ToUpper(name[:1]) + strings.ToLower(name[1:])
 	// Special cases for multi-word names
 	switch strings.ToLower(name) {
@@ -87,6 +98,7 @@ func handlePlanet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, interp)
 }
 
+// handleSign looks up a single zodiac sign by name from the URL path segment.
 func handleSign(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/interpret/sign/")
 	name = strings.TrimSpace(name)
@@ -103,6 +115,7 @@ func handleSign(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, interp)
 }
 
+// handleHouse looks up a single house by its number (1-12) from the URL path segment.
 func handleHouse(w http.ResponseWriter, r *http.Request) {
 	raw := strings.TrimPrefix(r.URL.Path, "/interpret/house/")
 	raw = strings.TrimSpace(raw)
@@ -112,7 +125,7 @@ func handleHouse(w http.ResponseWriter, r *http.Request) {
 	}
 	num, err := strconv.Atoi(raw)
 	if err != nil || num < 1 || num > 12 {
-		writeError(w, http.StatusBadRequest, "house number must be 1–12")
+		writeError(w, http.StatusBadRequest, "house number must be 1-12")
 		return
 	}
 	interp, ok := houses[num]
@@ -123,6 +136,7 @@ func handleHouse(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, interp)
 }
 
+// handleAspect looks up a single aspect type (e.g. "trine") from the URL path segment.
 func handleAspect(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/interpret/aspect/")
 	name = strings.ToLower(strings.TrimSpace(name))
@@ -138,6 +152,8 @@ func handleAspect(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, interp)
 }
 
+// handleAllPlanets returns the entire planets map as JSON, used by the frontend
+// to prefetch interpretation data for all planets at once.
 func handleAllPlanets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, planets)
 }
@@ -154,6 +170,8 @@ func handleAllAspects(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, aspects)
 }
 
+// handlePlanetInSign reads planet, sign, and optional retrograde query params,
+// normalizes them, and delegates to composePlanetInSign in combos.go.
 func handlePlanetInSign(w http.ResponseWriter, r *http.Request) {
 	planet := strings.TrimSpace(r.URL.Query().Get("planet"))
 	sign := strings.TrimSpace(r.URL.Query().Get("sign"))
@@ -167,6 +185,8 @@ func handlePlanetInSign(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, composePlanetInSign(planet, sign, retrograde))
 }
 
+// handlePlanetInHouse reads planet and house query params and delegates
+// to composePlanetInHouse in combos.go.
 func handlePlanetInHouse(w http.ResponseWriter, r *http.Request) {
 	planet := strings.TrimSpace(r.URL.Query().Get("planet"))
 	houseStr := strings.TrimSpace(r.URL.Query().Get("house"))
@@ -176,13 +196,15 @@ func handlePlanetInHouse(w http.ResponseWriter, r *http.Request) {
 	}
 	houseNum, err := strconv.Atoi(houseStr)
 	if err != nil || houseNum < 1 || houseNum > 12 {
-		writeError(w, http.StatusBadRequest, "house must be 1–12")
+		writeError(w, http.StatusBadRequest, "house must be 1-12")
 		return
 	}
 	planet = normalizePlanet(planet)
 	writeJSON(w, http.StatusOK, composePlanetInHouse(planet, houseNum))
 }
 
+// handleHouseCusp reads house and sign query params and delegates to
+// composeHouseCusp in combos.go.
 func handleHouseCusp(w http.ResponseWriter, r *http.Request) {
 	houseStr := strings.TrimSpace(r.URL.Query().Get("house"))
 	sign := strings.TrimSpace(r.URL.Query().Get("sign"))
@@ -192,13 +214,15 @@ func handleHouseCusp(w http.ResponseWriter, r *http.Request) {
 	}
 	houseNum, err := strconv.Atoi(houseStr)
 	if err != nil || houseNum < 1 || houseNum > 12 {
-		writeError(w, http.StatusBadRequest, "house must be 1–12")
+		writeError(w, http.StatusBadRequest, "house must be 1-12")
 		return
 	}
 	sign = strings.ToUpper(sign[:1]) + strings.ToLower(sign[1:])
 	writeJSON(w, http.StatusOK, composeHouseCusp(houseNum, sign))
 }
 
+// handleAspectCombo reads planet1, aspect, and planet2 query params and
+// delegates to composeAspectCombo in combos.go.
 func handleAspectCombo(w http.ResponseWriter, r *http.Request) {
 	planet1 := strings.TrimSpace(r.URL.Query().Get("planet1"))
 	aspectType := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("aspect")))
@@ -212,6 +236,9 @@ func handleAspectCombo(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, composeAspectCombo(planet1, aspectType, planet2))
 }
 
+// normalizePlanet standardizes planet name casing so map lookups work regardless
+// of how the caller spelled it. The four chart angles are handled explicitly
+// because they use all-caps keys in the planets map.
 func normalizePlanet(name string) string {
 	switch strings.ToLower(name) {
 	case "asc", "ascendant", "as":

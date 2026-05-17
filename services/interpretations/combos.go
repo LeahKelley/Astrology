@@ -1,3 +1,8 @@
+// combos.go builds ComboInterpretation responses for every placement type.
+// Each compose function tries the pre-written lookup tables first (the *_data.go
+// files), and falls back to a generated sentence using the base descriptions from
+// data.go if no specific text exists. This way even rare or edge-case combos
+// return something useful rather than an empty response.
 package main
 
 import (
@@ -5,12 +10,19 @@ import (
 	"strings"
 )
 
+// ComboInterpretation is the JSON shape returned by all /interpret/combo/* routes.
+// Title is the human-readable label, Text is the full interpretation, and Keywords
+// are merged from the relevant planet/sign/house/aspect entries in data.go.
 type ComboInterpretation struct {
 	Title    string   `json:"title"`
 	Text     string   `json:"text"`
 	Keywords []string `json:"keywords"`
 }
 
+// retrogradeDescriptions holds extra paragraphs appended to planet-in-sign
+// interpretations when retrograde=true is requested. Only outer planets and
+// Mercury/Venus/Mars are included because the inner planets retrograde rarely
+// in natal charts and the outer ones share their descriptions generationally.
 var retrogradeDescriptions = map[string]string{
 	"Mercury": "Mercury retrograde in the natal chart turns the planet's communicative and analytical energies inward. You likely have a reflective, introspective thinking style — processing ideas deeply before expressing them. This placement correlates with rich inner monologue, a tendency to revise and reconsider, and insight gained through turning the mind back on itself. Writing, art, or other non-linear modes of expression may come more naturally than spontaneous speech.",
 	"Venus":   "Venus retrograde in the natal chart means the planet's capacity for love, beauty, and connection operates beneath the surface. Your approach to relationships and values may be unconventional, late-blooming, or deeply internalized. You may experience love as something requiring unusual introspection or revisiting. Over time, retrograde Venus natives typically develop a profoundly personal and authentic sense of what they find beautiful and whom they love — earned through reflection rather than inherited from social convention.",
@@ -22,6 +34,10 @@ var retrogradeDescriptions = map[string]string{
 	"Pluto":   "Pluto retrograde in the natal chart (very common, as Pluto is retrograde roughly half the year) turns the planet's transformative and power-related themes inward. Your most profound metamorphoses tend to happen in private — not through dramatic external events, but through deep internal shifts in consciousness. You are likely intensely private about your shadow side and deepest desires. Transformation is a slow, subterranean process that only becomes visible across long stretches of time, but the changes it produces are thorough and permanent.",
 }
 
+// composePlanetInSign builds the interpretation for a planet placed in a zodiac sign.
+// It first checks planetInSignText for a hand-written entry, then falls back to a
+// generated paragraph using the planet and sign base descriptions. If retrograde is
+// true, the matching retrogradeDescriptions paragraph is appended at the end.
 func composePlanetInSign(planetName, signName string, retrograde bool) ComboInterpretation {
 	p, hasP := planets[planetName]
 	s, hasS := signs[signName]
@@ -33,7 +49,6 @@ func composePlanetInSign(planetName, signName string, retrograde bool) ComboInte
 
 	var sb strings.Builder
 
-	// Use the specific written interpretation if available
 	lookupKey := planetName + "_" + signName
 	if specific, ok := planetInSignText[lookupKey]; ok {
 		sb.WriteString(specific)
@@ -69,6 +84,8 @@ func composePlanetInSign(planetName, signName string, retrograde bool) ComboInte
 	return ComboInterpretation{Title: title, Text: sb.String(), Keywords: kw}
 }
 
+// composePlanetInHouse builds the interpretation for a planet placed in a house.
+// Same lookup-then-fallback pattern as composePlanetInSign.
 func composePlanetInHouse(planetName string, houseNum int) ComboInterpretation {
 	p, hasP := planets[planetName]
 	h, hasH := houses[houseNum]
@@ -105,6 +122,8 @@ func composePlanetInHouse(planetName string, houseNum int) ComboInterpretation {
 	return ComboInterpretation{Title: title, Text: sb.String(), Keywords: kw}
 }
 
+// composeHouseCusp builds the interpretation for a house cusp falling in a sign.
+// Same lookup-then-fallback pattern as composePlanetInSign.
 func composeHouseCusp(houseNum int, signName string) ComboInterpretation {
 	h, hasH := houses[houseNum]
 	s, hasS := signs[signName]
@@ -142,6 +161,10 @@ func composeHouseCusp(houseNum int, signName string) ComboInterpretation {
 	return ComboInterpretation{Title: title, Text: sb.String(), Keywords: kw}
 }
 
+// composeAspectCombo builds the interpretation for an aspect between two planets.
+// It checks both the forward key (planet1_aspect_planet2) and the reverse key
+// (planet2_aspect_planet1) because aspects are bidirectional and the data file
+// only stores each pair once.
 func composeAspectCombo(planet1, aspectType, planet2 string) ComboInterpretation {
 	p1, hasP1 := planets[planet1]
 	p2, hasP2 := planets[planet2]

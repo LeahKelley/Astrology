@@ -1,5 +1,9 @@
 package main
 
+// aspectComboText holds specific interpretations for planet-aspect-planet combos.
+// Key format: "Planet1_AspectType_Planet2" (e.g. "Sun_conjunction_Moon", "Mars_trine_Jupiter").
+// Each pair is stored once. composeAspectCombo in combos.go checks both the
+// forward and reverse key, so order does not matter at lookup time.
 var aspectComboText = map[string]string{
 
 	// ── CONJUNCTIONS ─────────────────────────────────────────────────────────

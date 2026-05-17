@@ -1,13 +1,22 @@
+// data.go defines the base interpretation data for planets, signs, houses, and aspects.
+// These entries describe each entity on its own, without reference to a specific
+// placement combination. The combo functions in combos.go pull from these maps when
+// building fallback text for combinations that don't have a hand-written entry.
 package main
 
+// Interpretation is the shared structure for all four entity types. Description
+// gives a general overview, and InChart explains how the entity behaves when it
+// appears in a natal chart placement.
 type Interpretation struct {
-	Name        string `json:"name"`
-	Symbol      string `json:"symbol"`
+	Name        string   `json:"name"`
+	Symbol      string   `json:"symbol"`
 	Keywords    []string `json:"keywords"`
-	Description string `json:"description"`
-	InChart     string `json:"in_chart"`
+	Description string   `json:"description"`
+	InChart     string   `json:"in_chart"`
 }
 
+// planets includes the ten traditional natal chart bodies plus the four chart
+// angles (ASC, DSC, MC, IC), which the frontend treats as clickable planets.
 var planets = map[string]Interpretation{
 	"Sun": {
 		Name:    "Sun",
@@ -109,6 +118,7 @@ var planets = map[string]Interpretation{
 	},
 }
 
+// signs covers all twelve zodiac signs.
 var signs = map[string]Interpretation{
 	"Aries": {
 		Name:    "Aries",
@@ -196,6 +206,8 @@ var signs = map[string]Interpretation{
 	},
 }
 
+// houses is keyed by house number (1-12) rather than a string so lookups
+// work directly from the integer parsed out of the URL.
 var houses = map[int]Interpretation{
 	1: {
 		Name:    "First House",
@@ -283,6 +295,8 @@ var houses = map[int]Interpretation{
 	},
 }
 
+// aspects covers the five major aspects. Keys are lowercase (e.g. "trine")
+// to match the lowercase normalization applied in the HTTP handlers.
 var aspects = map[string]Interpretation{
 	"conjunction": {
 		Name:    "Conjunction",

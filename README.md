@@ -122,9 +122,12 @@ The app will be available at **http://localhost:3000**.
   "time": "14:30",
   "timezone": "America/New_York",
   "latitude": 40.7128,
-  "longitude": -74.0060
+  "longitude": -74.0060,
+  "house_system": "placidus"
 }
 ```
+
+`house_system` is optional and defaults to `placidus`.
 
 ### Geolocation Service — port 8001
 

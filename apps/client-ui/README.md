@@ -65,7 +65,9 @@ The four service URL variables are optional — if omitted, the app falls back t
 |-----------|---------|
 | `DailyActivityCard` | Fetches and displays daily Work/Social/Focus/Rest forecast from port 8003. Supports switching between saved profiles. |
 | `PlacementsCard` | Shows Sun, Moon, and Rising sign for the user's own profile. Calls ports 8001 and 8000. Falls back gracefully if services are offline. |
-| `ChartResults` | Renders the full natal chart output — planet positions, house placements, and aspects. |
+| `ChartWheel` | Renders the interactive SVG natal chart wheel using `@astrodraw/astrochart`. Handles planet and sign click events. |
+| `ChartClickPanel` | Side panel that shows interpretation text when the user clicks a planet or sign on the wheel. |
+| `ChartResults` | Renders the full natal chart output — planet positions, house placements, and aspects — as expandable table rows. |
 | `ProfileForm` | Shared form used across onboarding, natal chart, and settings pages for entering birth details. |
 | `Navbar` | Fixed top nav with auth state awareness and mobile hamburger menu. |
 | `StarField` | Animated star background used across pages. |

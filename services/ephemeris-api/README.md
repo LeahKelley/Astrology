@@ -31,14 +31,26 @@ Interactive docs available at **http://127.0.0.1:8000/docs**.
   "time": "14:30",
   "timezone": "America/New_York",
   "latitude": 40.7128,
-  "longitude": -74.0060
+  "longitude": -74.0060,
+  "house_system": "placidus"
 }
 ```
+
+`house_system` is optional and defaults to `placidus`. It is the only supported value in v1.
 
 ## Natal Chart Response
 
 ```json
 {
+  "meta": {
+    "house_system": "placidus",
+    "timezone": "America/New_York"
+  },
+  "angles": {
+    "asc": 152.3,
+    "mc": 72.1
+  },
+  "houses": [152.3, 182.1, 212.0, 242.3, 272.1, 302.0, 332.3, 2.1, 32.0, 62.3, 92.1, 122.0],
   "bodies": [
     {
       "name": "Sun",
@@ -50,15 +62,30 @@ Interactive docs available at **http://127.0.0.1:8000/docs**.
       "speed": 0.95
     }
   ],
-  "angles": {
-    "asc": 152.3,
-    "mc": 72.1
-  },
-  "houses": [152.3, 182.1, 212.0, 242.3, 272.1, 302.0, 332.3, 2.1, 32.0, 62.3, 92.1, 122.0],
   "aspects": [
     { "a": "Sun", "type": "trine", "b": "Moon", "orb": 2.4 }
   ]
 }
+```
+
+`bodies` includes Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto. `house` is 1–12, or `null` if house calculation was not run.
+
+## Structure
+
+```
+src/app/
+├── main.py                  # FastAPI app factory, CORS, router mount
+├── api/
+│   ├── routes.py            # Top-level router that includes sub-routers
+│   ├── health.py            # GET /api/v1/health
+│   └── chart.py             # POST /api/v1/chart/natal
+└── core/
+    ├── config.py            # Pydantic BaseSettings (env vars)
+    ├── models.py            # Request/response Pydantic models
+    ├── errors.py            # Custom exception hierarchy
+    ├── logging.py           # App-wide logging setup
+    ├── swisseph_adapter.py  # All pyswisseph calls isolated here
+    └── natal_chart_service.py  # Orchestrates chart computation
 ```
 
 ## Dependencies

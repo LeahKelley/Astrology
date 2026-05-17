@@ -1,19 +1,16 @@
+# the root exception for this whole app, all other custom errors inherit from this
+# so callers can catch AstrologyAPIError and get everything in one go
 class AstrologyAPIError(Exception):
-    """
-    Base exception for application errors.
-    """
     pass
 
 
+# thrown when something goes wrong during the actual planetary math,
+# i.e. swisseph returning a bad result or getting unexpected input
 class ChartCalculationError(AstrologyAPIError):
-    """
-    Raised when natal chart calculations fail.
-    """
     pass
 
 
+# thrown when the ephemeris data files can't be found or loaded,
+# usually a  path config issue or missing data directory
 class EphemerisDataError(AstrologyAPIError):
-    """
-    Raised when Swiss Ephemeris data cannot be loaded.
-    """
     pass
